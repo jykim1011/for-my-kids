@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">ForMyKids</string>
+    <string name="mode_select_title">기기 역할 선택</string>
+    <string name="btn_parent">부모</string>
+    <string name="btn_child">아이</string>
+    <string name="listen_start">듣기 시작</string>
+    <string name="listen_stop">듣기 중지</string>
+    <string name="status_connected">서버: 연결됨 🟢</string>
+    <string name="status_disconnected">서버: 연결 중... 🔴</string>
+    <string name="child_status_idle">아이: 대기 중</string>
+    <string name="child_status_streaming">아이: 전송 중 🎙️</string>
+    <string name="other_parent_listening">상대방도 듣는 중 👂</string>
+    <string name="protecting">보호 중 🛡️</string>
+    <string name="notification_channel">ForMyKids</string>
+    <string name="notification_text">보호 중 🛡️</string>
+</resources>
