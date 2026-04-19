@@ -70,7 +70,7 @@ class AudioStreamService : Service() {
         statusCallback?.invoke(false)
     }
 
-    private fun captureLoop() {
+    private suspend fun captureLoop() {
         val sampleRate = 8000
         val minBuf = AudioRecord.getMinBufferSize(
             sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT
@@ -83,7 +83,7 @@ class AudioStreamService : Service() {
         recorder.startRecording()
         val chunk = ByteArray(1600) // 100ms at 8kHz 16-bit mono
         try {
-            while (streaming && isActive) {
+            while (streaming && currentCoroutineContext().isActive) {
                 val read = recorder.read(chunk, 0, chunk.size)
                 if (read > 0) WebSocketManager.send(chunk.copyOf(read))
             }
