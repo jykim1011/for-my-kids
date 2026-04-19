@@ -26,14 +26,24 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (data, isBinary) => {
     if (isBinary) {
+      if (ws !== session.child) return; // only child may send audio
       session.listeningParents.forEach(p => safeSend(p, data));
       return;
     }
 
-    const msg = JSON.parse(data.toString());
+    let msg;
+    try {
+      msg = JSON.parse(data.toString());
+    } catch (_) {
+      return; // ignore malformed frames
+    }
 
     if (msg.type === 'register') {
       if (msg.role === 'child') {
+        if (session.child && session.child !== ws) {
+          console.warn('Second child registered — closing previous child connection');
+          session.child.close(1000, 'replaced');
+        }
         session.child = ws;
         console.log('Child registered');
       } else if (msg.role === 'parent') {
@@ -42,11 +52,13 @@ wss.on('connection', (ws) => {
         safeSend(ws, JSON.stringify({ type: 'status', listeningCount: session.listeningParents.size }));
       }
     } else if (msg.type === 'start_listen') {
+      if (!session.parents.has(ws)) return;
       const wasZero = session.listeningParents.size === 0;
       session.listeningParents.add(ws);
       if (wasZero) safeSend(session.child, JSON.stringify({ type: 'start_stream' }));
       notifyStatus();
     } else if (msg.type === 'stop_listen') {
+      if (!session.parents.has(ws)) return;
       session.listeningParents.delete(ws);
       if (session.listeningParents.size === 0) {
         safeSend(session.child, JSON.stringify({ type: 'stop_stream' }));
@@ -68,6 +80,8 @@ wss.on('connection', (ws) => {
       notifyStatus();
     }
   });
+
+  ws.on('error', err => console.error('Socket error:', err.message));
 });
 
 console.log('Relay server listening on port 613');
