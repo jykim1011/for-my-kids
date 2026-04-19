@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(./gradlew :app:test --tests \"com.formykids.VolumeAnalyzerTest\")",
+      "Bash(./gradlew :app:testDebugUnitTest)",
+      "Bash(./gradlew :app:assembleDebug)",
+      "Bash(./gradlew assembleDebug)"
+    ]
+  }
+}
