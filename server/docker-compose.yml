@@ -1,7 +1,8 @@
 version: '3.8'
 services:
-  relay:
+  server:
     build: .
-    restart: unless-stopped
     ports:
-      - "613:613"
+      - "8080:8080"
+    env_file:
+      - .env
