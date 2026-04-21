@@ -54,11 +54,19 @@
         android:visibility="gone" />
 
     <Button
+        android:id="@+id/btnAlertHistory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="알림 이력"
+        android:layout_marginTop="8dp"
+        style="@style/Widget.AppCompat.Button.Borderless" />
+
+    <Button
         android:id="@+id/btnSettings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="설정"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="4dp"
         style="@style/Widget.AppCompat.Button.Borderless" />
 
     <FrameLayout

@@ -11,6 +11,7 @@ import com.formykids.WebSocketManager
 import com.formykids.databinding.ActivityParentBinding
 import com.formykids.settings.SettingsActivity
 import org.json.JSONObject
+import com.formykids.parent.AlertHistoryFragment
 
 class ParentActivity : AppCompatActivity() {
 
@@ -27,6 +28,13 @@ class ParentActivity : AppCompatActivity() {
 
         binding.btnSettings?.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        binding.btnAlertHistory?.setOnClickListener {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, AlertHistoryFragment())
+                .addToBackStack(null)
+                .commit()
         }
 
         binding.btnListen.setOnClickListener {
