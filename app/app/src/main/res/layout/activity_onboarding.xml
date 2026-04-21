@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="전화번호 인증"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp" />
+
+    <EditText
+        android:id="@+id/etPhone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="전화번호 (예: 01012345678)"
+        android:inputType="phone"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnSendCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="인증번호 전송"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:id="@+id/layoutCodeEntry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/etCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="인증번호 6자리"
+            android:inputType="number"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnVerify"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="확인" />
+    </LinearLayout>
+</LinearLayout>

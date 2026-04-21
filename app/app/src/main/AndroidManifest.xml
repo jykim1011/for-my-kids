@@ -17,7 +17,7 @@
         android:theme="@style/Theme.ForMyKids">
 
         <activity
-            android:name=".ModeSelectActivity"
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,6 +25,11 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".auth.OnboardingActivity" android:exported="false" />
+        <activity android:name=".auth.RoleSelectActivity" android:exported="false" />
+        <activity android:name=".auth.PairingActivity" android:exported="false" />
+
+        <activity android:name=".ModeSelectActivity" android:exported="false" />
         <activity android:name=".parent.ParentActivity" android:exported="false" />
         <activity android:name=".child.ChildActivity" android:exported="false" />
 
