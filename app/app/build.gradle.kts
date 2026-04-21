@@ -52,7 +52,9 @@ dependencies {
 
     // TF Lite for YAMNet
     implementation("org.tensorflow:tensorflow-lite:2.16.1")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4") {
+        exclude(group = "org.tensorflow", module = "tensorflow-lite-support-api")
+    }
 
     // Play Billing
     implementation("com.android.billingclient:billing-ktx:7.0.0")
