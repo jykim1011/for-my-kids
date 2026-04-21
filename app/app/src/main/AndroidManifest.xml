@@ -41,6 +41,8 @@
             android:foregroundServiceType="microphone"
             android:exported="false" />
 
+        <activity android:name=".billing.PaywallActivity" android:exported="false" />
+
         <service
             android:name=".FcmService"
             android:exported="false">
