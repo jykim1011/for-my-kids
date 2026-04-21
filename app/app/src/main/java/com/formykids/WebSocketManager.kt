@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import okhttp3.*
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
+import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 object WebSocketManager {
@@ -16,25 +17,39 @@ object WebSocketManager {
     private var webSocket: WebSocket? = null
     private var reconnectJob: Job? = null
     private var shouldReconnect = false
+    private var idToken: String? = null
+    private var serverUrl: String = App.DEFAULT_SERVER_URL
+    private var onAuthOk: ((String) -> Unit)? = null
 
     var onConnected: (() -> Unit)? = null
     var onDisconnected: (() -> Unit)? = null
     var onTextMessage: ((String) -> Unit)? = null
     var onBinaryMessage: ((ByteString) -> Unit)? = null
 
-    fun connect() {
+    fun connectWithAuth(serverUrl: String, idToken: String, onAuthOk: (familyId: String) -> Unit) {
+        this.serverUrl = serverUrl
+        this.idToken = idToken
+        this.onAuthOk = onAuthOk
         shouldReconnect = true
         openSocket()
     }
 
     private fun openSocket() {
-        val request = Request.Builder().url(App.SERVER_URL).build()
+        val request = Request.Builder().url(serverUrl).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) {
                 reconnectJob?.cancel()
+                val token = idToken
+                if (token != null) {
+                    ws.send("""{"type":"auth","idToken":"$token"}""")
+                }
                 onConnected?.invoke()
             }
             override fun onMessage(ws: WebSocket, text: String) {
+                val msg = runCatching { JSONObject(text) }.getOrNull()
+                if (msg?.optString("type") == "auth_ok") {
+                    onAuthOk?.invoke(msg.getString("familyId"))
+                }
                 onTextMessage?.invoke(text)
             }
             override fun onMessage(ws: WebSocket, bytes: ByteString) {

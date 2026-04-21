@@ -1,8 +1,10 @@
 package com.formykids.parent
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.formykids.App
 import com.formykids.R
 import com.formykids.WebSocketManager
 import com.formykids.databinding.ActivityParentBinding
@@ -65,7 +67,10 @@ class ParentActivity : AppCompatActivity() {
             val vol = (VolumeAnalyzer.rms(pcm) * 100).toInt().coerceIn(0, 100)
             runOnUiThread { binding.progressVolume.progress = vol }
         }
-        WebSocketManager.connect()
+        val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
+        val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL) ?: App.DEFAULT_SERVER_URL
+        val idToken = prefs.getString("idToken", "") ?: ""
+        WebSocketManager.connectWithAuth(serverUrl, idToken) { /* familyId */ }
     }
 
     override fun onDestroy() {

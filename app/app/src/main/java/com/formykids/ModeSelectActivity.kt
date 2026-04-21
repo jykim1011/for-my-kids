@@ -15,7 +15,7 @@ class ModeSelectActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences(App.PREF_NAME, MODE_PRIVATE)
-        val role = prefs.getString(App.PREF_ROLE, null)
+        val role = prefs.getString("role", null)
         if (role != null) {
             launchRoleActivity(role)
             return
@@ -30,7 +30,7 @@ class ModeSelectActivity : AppCompatActivity() {
 
     private fun saveRoleAndLaunch(role: String) {
         getSharedPreferences(App.PREF_NAME, MODE_PRIVATE)
-            .edit().putString(App.PREF_ROLE, role).apply()
+            .edit().putString("role", role).apply()
         launchRoleActivity(role)
     }
 

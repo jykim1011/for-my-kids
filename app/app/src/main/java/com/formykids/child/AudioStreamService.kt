@@ -1,6 +1,7 @@
 package com.formykids.child
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.media.AudioFormat
 import android.media.AudioRecord
@@ -54,7 +55,10 @@ class AudioStreamService : Service() {
                 "stop_stream" -> stopStreaming()
             }
         }
-        WebSocketManager.connect()
+        val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
+        val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL) ?: App.DEFAULT_SERVER_URL
+        val idToken = prefs.getString("idToken", "") ?: ""
+        WebSocketManager.connectWithAuth(serverUrl, idToken) { /* familyId handled by parent flow */ }
     }
 
     private fun startStreaming() {
