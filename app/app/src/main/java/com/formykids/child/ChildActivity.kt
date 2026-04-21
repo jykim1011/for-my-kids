@@ -9,6 +9,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.formykids.R
 import com.formykids.databinding.ActivityChildBinding
+import com.formykids.settings.SettingsActivity
 
 class ChildActivity : AppCompatActivity() {
 
@@ -24,6 +25,10 @@ class ChildActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 1)
         } else {
             startAudioService()
+        }
+
+        binding.btnSettings?.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         AudioStreamService.limitCallback = {

@@ -1,6 +1,7 @@
 package com.formykids.parent
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -8,6 +9,7 @@ import com.formykids.App
 import com.formykids.R
 import com.formykids.WebSocketManager
 import com.formykids.databinding.ActivityParentBinding
+import com.formykids.settings.SettingsActivity
 import org.json.JSONObject
 
 class ParentActivity : AppCompatActivity() {
@@ -22,6 +24,10 @@ class ParentActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupWebSocket()
+
+        binding.btnSettings?.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
 
         binding.btnListen.setOnClickListener {
             listening = !listening

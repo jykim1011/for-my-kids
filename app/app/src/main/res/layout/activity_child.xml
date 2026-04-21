@@ -29,4 +29,12 @@
         android:text="스트리밍: 대기 중"
         android:textSize="16sp" />
 
+    <Button
+        android:id="@+id/btnSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="설정"
+        android:layout_marginTop="16dp"
+        style="@style/Widget.AppCompat.Button.Borderless" />
+
 </LinearLayout>
