@@ -34,7 +34,6 @@ class AudioStreamService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        dangerDetector = DangerDetector(this)
         startForeground(NOTIFICATION_ID, buildNotification())
         setupWebSocket()
     }
@@ -86,6 +85,14 @@ class AudioStreamService : Service() {
     }
 
     private suspend fun captureLoop() {
+        // Await premium check before starting — prevents race condition where
+        // isPremium is false for first few seconds even for paying users.
+        val isPremium = FirestoreManager.isPremium()
+
+        if (isPremium && dangerDetector == null) {
+            dangerDetector = DangerDetector(this@AudioStreamService)
+        }
+
         val sampleRate = 16000
         val minBuf = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         val bufSize = maxOf(minBuf, 6400)
@@ -97,8 +104,6 @@ class AudioStreamService : Service() {
         val chunk = ByteArray(3200) // 100ms at 16kHz
         val analysisBuffer = ByteArray(31200) // ~1s at 16kHz for YAMNet
         var analysisPos = 0
-        var isPremium = false
-        scope.launch { isPremium = FirestoreManager.isPremium() }
 
         try {
             while (streaming && currentCoroutineContext().isActive) {

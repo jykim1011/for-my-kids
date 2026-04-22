@@ -33,8 +33,7 @@ class ChildActivity : AppCompatActivity() {
 
         AudioStreamService.limitCallback = {
             runOnUiThread {
-                // Show paywall - for now just show a toast
-                android.widget.Toast.makeText(this, "오늘 무료 이용 시간이 끝났습니다.", android.widget.Toast.LENGTH_LONG).show()
+                startActivity(Intent(this, com.formykids.billing.PaywallActivity::class.java))
             }
         }
         AudioStreamService.connectionCallback = { connected ->

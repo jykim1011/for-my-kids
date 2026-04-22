@@ -4,10 +4,13 @@ function getOrCreate(familyId) {
   if (!sessions.has(familyId)) {
     sessions.set(familyId, {
       child: null,
+      childUid: null,
+      plan: 'free',
       parents: new Set(),
       listeningParents: new Set(),
       dailyStreamedSeconds: 0,
       dailyResetAt: Date.now(),
+      pendingFlush: false,
     });
   }
   return sessions.get(familyId);

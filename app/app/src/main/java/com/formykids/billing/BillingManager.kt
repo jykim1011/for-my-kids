@@ -18,6 +18,8 @@ import org.json.JSONObject
 
 class BillingManager(context: Context, private val serverUrl: String) : PurchasesUpdatedListener {
 
+    private val httpClient = OkHttpClient()
+
     private val client = BillingClient.newBuilder(context)
         .setListener(this)
         .enablePendingPurchases()
@@ -81,7 +83,7 @@ class BillingManager(context: Context, private val serverUrl: String) : Purchase
         val body = JSONObject(mapOf("idToken" to idToken, "purchaseToken" to purchaseToken))
             .toString().toRequestBody("application/json".toMediaType())
         val request = Request.Builder().url("$serverUrl/verify-purchase").post(body).build()
-        runCatching { OkHttpClient().newCall(request).execute() }.onSuccess {
+        runCatching { httpClient.newCall(request).execute() }.onSuccess {
             if (it.isSuccessful) onPurchaseSuccess?.invoke()
             else onPurchaseError?.invoke("서버 검증 실패")
         }

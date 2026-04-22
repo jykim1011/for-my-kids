@@ -25,6 +25,13 @@ class AlertHistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         lifecycleScope.launch {
+            if (!FirestoreManager.isPremium()) {
+                binding.listAlerts.adapter = ArrayAdapter(
+                    requireContext(), android.R.layout.simple_list_item_1,
+                    listOf("프리미엄 플랜에서 알림 이력을 확인할 수 있습니다.")
+                )
+                return@launch
+            }
             val user = FirestoreManager.getCurrentUser() ?: return@launch
             val familyId = user["familyId"] as? String ?: return@launch
             val alerts = FirestoreManager.getAlerts(familyId)

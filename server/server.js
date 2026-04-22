@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
-const { getOrCreate, removeClient } = require('./sessions');
+const { getOrCreate, removeClient, sessions } = require('./sessions');
 const { verifyIdToken, getFirestore } = require('./auth');
 const { sendDangerAlert } = require('./fcm');
 const { verifySubscription } = require('./billing');
@@ -23,6 +23,11 @@ app.post('/verify-purchase', async (req, res) => {
     const uid = await verifyIdToken(idToken);
     const data = await verifySubscription(PACKAGE_NAME, SUBSCRIPTION_ID, purchaseToken);
     const expiresAt = parseInt(data.expiryTimeMillis);
+    // paymentState: 0=pending, 1=received, 2=free trial
+    const paymentState = data.paymentState;
+    if ((paymentState !== 1 && paymentState !== 2) || expiresAt <= Date.now()) {
+      return res.status(400).json({ error: 'subscription not active' });
+    }
     await getFirestore().collection('subscriptions').doc(uid).set(
       { plan: 'premium', expiresAt, purchaseToken },
       { merge: true }
@@ -42,6 +47,27 @@ function safeSend(ws, data) {
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(data);
 }
 
+async function flushChildSeconds(familyId) {
+  const session = sessions.get(familyId);
+  if (!session || !session.childUid || !session.pendingFlush) return;
+  session.pendingFlush = false;
+  try {
+    await getFirestore().collection('subscriptions').doc(session.childUid).set(
+      { dailyStreamedSeconds: session.dailyStreamedSeconds, dailyResetAt: session.dailyResetAt },
+      { merge: true }
+    );
+  } catch (e) {
+    console.error('flush error:', e.message);
+  }
+}
+
+// Flush streaming seconds to Firestore every 60 seconds
+setInterval(async () => {
+  for (const [familyId] of sessions) {
+    await flushChildSeconds(familyId);
+  }
+}, 60000);
+
 wss.on('connection', (ws) => {
   ws.on('message', async (data, isBinary) => {
     if (isBinary) {
@@ -49,24 +75,20 @@ wss.on('connection', (ws) => {
       if (!meta || meta.role !== 'child') return;
       const session = getOrCreate(meta.familyId);
 
-      const subDoc = await getFirestore().collection('subscriptions').doc(meta.uid).get();
-      const sub = subDoc.data() ?? {};
-      if (sub.plan !== 'premium') {
+      if (session.plan !== 'premium') {
         const now = Date.now();
-        if (now - (sub.dailyResetAt ?? 0) > 86400000) {
-          await getFirestore().collection('subscriptions').doc(meta.uid).set(
-            { dailyStreamedSeconds: 0, dailyResetAt: now }, { merge: true }
-          );
-          sub.dailyStreamedSeconds = 0;
+        if (now - session.dailyResetAt > 86400000) {
+          session.dailyStreamedSeconds = 0;
+          session.dailyResetAt = now;
         }
-        if ((sub.dailyStreamedSeconds ?? 0) >= FREE_DAILY_LIMIT_SECONDS) {
+        if (session.dailyStreamedSeconds >= FREE_DAILY_LIMIT_SECONDS) {
           safeSend(ws, JSON.stringify({ type: 'stream_limit_reached' }));
           return;
         }
-        await getFirestore().collection('subscriptions').doc(meta.uid).set(
-          { dailyStreamedSeconds: (sub.dailyStreamedSeconds ?? 0) + 0.1 }, { merge: true }
-        );
+        session.dailyStreamedSeconds += 0.1;
+        session.pendingFlush = true;
       }
+
       session.listeningParents.forEach(p => safeSend(p, data));
       return;
     }
@@ -85,6 +107,20 @@ wss.on('connection', (ws) => {
         if (user.role === 'child') {
           if (session.child && session.child !== ws) session.child.close(1000, 'replaced');
           session.child = ws;
+          session.childUid = uid;
+          // Load streaming quota from Firestore into memory
+          const subDoc = await getFirestore().collection('subscriptions').doc(uid).get();
+          const sub = subDoc.data() ?? {};
+          const now = Date.now();
+          if (now - (sub.dailyResetAt ?? 0) > 86400000) {
+            session.dailyStreamedSeconds = 0;
+            session.dailyResetAt = now;
+          } else {
+            session.dailyStreamedSeconds = sub.dailyStreamedSeconds ?? 0;
+            session.dailyResetAt = sub.dailyResetAt ?? now;
+          }
+          session.plan = sub.plan === 'premium' && sub.expiresAt > now ? 'premium' : 'free';
+          session.pendingFlush = false;
         } else {
           session.parents.add(ws);
           safeSend(ws, JSON.stringify({ type: 'status', listeningCount: session.listeningParents.size }));
@@ -110,6 +146,8 @@ wss.on('connection', (ws) => {
       if (session.listeningParents.size === 0) safeSend(session.child, JSON.stringify({ type: 'stop_stream' }));
       session.parents.forEach(p => safeSend(p, JSON.stringify({ type: 'status', listeningCount: session.listeningParents.size })));
     } else if (msg.type === 'danger_alert' && meta.role === 'child') {
+      // Only premium children can trigger FCM danger alerts
+      if (session.plan !== 'premium') return;
       const parentTokens = await getParentFcmTokens(meta.familyId);
       await Promise.all(parentTokens.map(token =>
         sendDangerAlert({ fcmToken: token, type: msg.class, confidence: msg.confidence, familyId: meta.familyId })
@@ -117,13 +155,22 @@ wss.on('connection', (ws) => {
     }
   });
 
-  ws.on('close', () => {
+  ws.on('close', async () => {
     const result = removeClient(ws);
     wsClients.delete(ws);
     if (!result) return;
-    if (result.role !== 'child' && result.wasListening) {
-      const session = getOrCreate(result.familyId);
-      if (session.listeningParents.size === 0) safeSend(session.child, JSON.stringify({ type: 'stop_stream' }));
+    if (result.role === 'child') {
+      await flushChildSeconds(result.familyId);
+    } else if (result.wasListening) {
+      const session = sessions.get(result.familyId);
+      if (session && session.listeningParents.size === 0) {
+        safeSend(session.child, JSON.stringify({ type: 'stop_stream' }));
+      }
+    }
+    // Prune empty sessions
+    const session = sessions.get(result.familyId);
+    if (session && !session.child && session.parents.size === 0) {
+      sessions.delete(result.familyId);
     }
   });
 
