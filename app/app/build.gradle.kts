@@ -56,6 +56,9 @@ dependencies {
         exclude(group = "org.tensorflow", module = "tensorflow-lite-support-api")
     }
 
+    // RecyclerView
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+
     // Play Billing
     implementation("com.android.billingclient:billing-ktx:7.0.0")
 

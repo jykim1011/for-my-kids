@@ -1,9 +1,72 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.ForMyKids" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/primary_pale</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="android:colorBackground">@color/background_blue</item>
+        <item name="android:windowBackground">@color/background_blue</item>
     </style>
 
     <style name="Theme.ForMyKids" parent="Base.Theme.ForMyKids" />
+
+    <!-- Root namespace anchor required for dot-notation style inheritance -->
+    <style name="Widget.ForMyKids" parent="" />
+
+    <!-- TopBar -->
+    <style name="Widget.ForMyKids.TopBar">
+        <item name="android:background">@color/primary</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+    </style>
+
+    <!-- Primary Button -->
+    <style name="Widget.ForMyKids.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">@color/primary</item>
+        <item name="cornerRadius">10dp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Secondary Button -->
+    <style name="Widget.ForMyKids.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="strokeColor">@color/primary_pale</item>
+        <item name="cornerRadius">10dp</item>
+        <item name="android:textColor">@color/primary</item>
+    </style>
+
+    <!-- Card -->
+    <style name="Widget.ForMyKids.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="cardBackgroundColor">@color/white</item>
+    </style>
+
+    <!-- Role Card (선택형) -->
+    <style name="Widget.ForMyKids.Card.Role" parent="Widget.ForMyKids.Card">
+        <item name="cardCornerRadius">14dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="strokeColor">@color/primary_pale</item>
+        <item name="strokeWidth">2dp</item>
+    </style>
+
+    <!-- Input Field -->
+    <style name="Widget.ForMyKids.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/primary_pale</item>
+        <item name="boxCornerRadiusTopStart">10dp</item>
+        <item name="boxCornerRadiusTopEnd">10dp</item>
+        <item name="boxCornerRadiusBottomStart">10dp</item>
+        <item name="boxCornerRadiusBottomEnd">10dp</item>
+    </style>
+
+    <!-- Section Label -->
+    <style name="Widget.ForMyKids.SectionLabel">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/text_hint</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
 </resources>
