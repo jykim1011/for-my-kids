@@ -18,7 +18,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="기기 연결"
+            android:text="@string/title_pairing"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"/>
@@ -37,7 +37,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="아이 기기에 이 코드를 입력하세요"
+            android:text="@string/pairing_parent_instruction"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:layout_marginBottom="20dp"/>
@@ -69,7 +69,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="코드는 5분 후 만료됩니다"
+                    android:text="@string/pairing_code_expiry"
                     android:textColor="@color/text_hint"
                     android:textSize="11sp"/>
             </LinearLayout>
@@ -80,7 +80,7 @@
             style="@style/Widget.ForMyKids.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="연결 완료"/>
+            android:text="@string/btn_code_done"/>
     </LinearLayout>
 
     <!-- Child flow -->
@@ -96,7 +96,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="부모 기기에서 받은 6자리 코드를 입력하세요"
+            android:text="@string/pairing_child_instruction"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:gravity="center"
@@ -106,7 +106,7 @@
             style="@style/Widget.ForMyKids.TextInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="6자리 코드"
+            android:hint="@string/hint_six_digit_code"
             android:layout_marginBottom="16dp">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -122,7 +122,7 @@
             style="@style/Widget.ForMyKids.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="연결"/>
+            android:text="@string/btn_submit_code"/>
     </LinearLayout>
 
 </LinearLayout>

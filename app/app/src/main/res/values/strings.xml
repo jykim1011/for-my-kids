@@ -36,4 +36,11 @@
     <string name="parent_device_desc">아이 소리를 듣고 알림을 받습니다</string>
     <string name="child_device">아이 기기</string>
     <string name="child_device_desc">소리를 감지하여 전송합니다</string>
+    <string name="title_pairing">기기 연결</string>
+    <string name="pairing_parent_instruction">아이 기기에 이 코드를 입력하세요</string>
+    <string name="pairing_code_expiry">코드는 5분 후 만료됩니다</string>
+    <string name="btn_code_done">연결 완료</string>
+    <string name="pairing_child_instruction">부모 기기에서 받은 6자리 코드를 입력하세요</string>
+    <string name="hint_six_digit_code">6자리 코드</string>
+    <string name="btn_submit_code">연결</string>
 </resources>
