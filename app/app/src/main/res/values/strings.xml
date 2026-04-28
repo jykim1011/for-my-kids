@@ -30,4 +30,10 @@
     <string name="protecting_subtitle">부모님이 지켜보고 있어요</string>
     <string name="server_connection">서버 연결</string>
     <string name="sound_sending">소리 전송</string>
+    <string name="role_select_title">이 기기는 누가 사용하나요?</string>
+    <string name="role_select_warning">한 번 설정하면 변경이 어렵습니다</string>
+    <string name="parent_device">부모 기기</string>
+    <string name="parent_device_desc">아이 소리를 듣고 알림을 받습니다</string>
+    <string name="child_device">아이 기기</string>
+    <string name="child_device_desc">소리를 감지하여 전송합니다</string>
 </resources>

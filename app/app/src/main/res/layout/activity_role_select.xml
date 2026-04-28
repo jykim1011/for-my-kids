@@ -20,7 +20,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="이 기기는 누가 사용하나요?"
+            android:text="@string/role_select_title"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"/>
@@ -28,7 +28,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="한 번 설정하면 변경이 어렵습니다"
+            android:text="@string/role_select_warning"
             android:textColor="#99FFFFFF"
             android:textSize="12sp"
             android:layout_marginTop="4dp"/>
@@ -70,7 +70,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="부모 기기"
+                    android:text="@string/parent_device"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold"
@@ -79,7 +79,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="아이 소리를 듣고 알림을 받습니다"
+                    android:text="@string/parent_device_desc"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"/>
             </LinearLayout>
@@ -112,7 +112,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="아이 기기"
+                    android:text="@string/child_device"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold"
@@ -121,7 +121,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="소리를 감지하여 전송합니다"
+                    android:text="@string/child_device_desc"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"/>
             </LinearLayout>
