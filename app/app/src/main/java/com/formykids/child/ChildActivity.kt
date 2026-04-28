@@ -46,7 +46,7 @@ class ChildActivity : AppCompatActivity() {
         AudioStreamService.statusCallback = { isStreaming ->
             runOnUiThread {
                 binding.tvStreamStatus.text =
-                    if (isStreaming) "스트리밍: 전송 중 🎙️" else "스트리밍: 대기 중"
+                    if (isStreaming) getString(R.string.streaming) else getString(R.string.idle)
             }
         }
     }
