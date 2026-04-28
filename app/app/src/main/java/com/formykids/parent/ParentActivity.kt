@@ -47,13 +47,13 @@ class ParentActivity : AppCompatActivity() {
             if (listening) {
                 player = AudioPlayer()
                 WebSocketManager.send("""{"type":"start_listen"}""")
-                binding.btnListen.text = getString(R.string.listen_stop)
+                binding.tvListenLabel.text = getString(R.string.listen_stop)
                 binding.tvChildStatus.text = getString(R.string.child_status_streaming)
             } else {
                 player?.release()
                 player = null
                 WebSocketManager.send("""{"type":"stop_listen"}""")
-                binding.btnListen.text = getString(R.string.listen_start)
+                binding.tvListenLabel.text = getString(R.string.listen_start)
                 binding.tvChildStatus.text = getString(R.string.child_status_idle)
                 binding.progressVolume.progress = 0
             }
