@@ -52,7 +52,7 @@
                 style="@style/Widget.ForMyKids.SectionLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="서버"
+                android:text="@string/section_server"
                 android:layout_marginBottom="8dp"/>
 
             <com.google.android.material.card.MaterialCardView
@@ -68,7 +68,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="서버 주소"
+                        android:text="@string/label_server_url"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp"
                         android:layout_marginBottom="6dp"/>
@@ -89,7 +89,7 @@
                         style="@style/Widget.ForMyKids.Button.Primary"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:text="저장"/>
+                        android:text="@string/btn_save"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -98,7 +98,7 @@
                 style="@style/Widget.ForMyKids.SectionLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="구독"
+                android:text="@string/section_subscription"
                 android:layout_marginBottom="8dp"/>
 
             <com.google.android.material.card.MaterialCardView
@@ -123,14 +123,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="구독 관리"
+                            android:text="@string/label_manage_subscription"
                             android:textColor="@color/text_primary"
                             android:textSize="13sp"
                             android:textStyle="bold"/>
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Play Store에서 관리"
+                            android:text="@string/label_manage_subscription_desc"
                             android:textColor="@color/text_hint"
                             android:textSize="11sp"
                             android:layout_marginTop="2dp"/>
@@ -148,7 +148,7 @@
                 style="@style/Widget.ForMyKids.SectionLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="계정"
+                android:text="@string/section_account"
                 android:layout_marginBottom="8dp"/>
 
             <com.google.android.material.card.MaterialCardView
@@ -168,7 +168,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="로그아웃"
+                        android:text="@string/label_logout"
                         android:textColor="@color/danger"
                         android:textSize="13sp"
                         android:textStyle="bold"/>

@@ -51,4 +51,12 @@
     <string name="btn_subscribe">구독 시작하기</string>
     <string name="btn_close">닫기</string>
     <string name="check_mark">✓</string>
+    <string name="section_server">서버</string>
+    <string name="label_server_url">서버 주소</string>
+    <string name="btn_save">저장</string>
+    <string name="section_subscription">구독</string>
+    <string name="label_manage_subscription">구독 관리</string>
+    <string name="label_manage_subscription_desc">Play Store에서 관리</string>
+    <string name="section_account">계정</string>
+    <string name="label_logout">로그아웃</string>
 </resources>
