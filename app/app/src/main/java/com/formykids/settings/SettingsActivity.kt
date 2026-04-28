@@ -37,5 +37,9 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnManageSubscription.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions")))
         }
+
+        binding.btnBack.setOnClickListener {
+            finish()
+        }
     }
 }
