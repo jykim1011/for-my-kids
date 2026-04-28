@@ -1,72 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp">
+    android:background="@color/background_blue">
+
+    <!-- TopBar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/primary"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="기기 연결"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
 
     <!-- Parent flow -->
     <LinearLayout
         android:id="@+id/layoutParent"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
+        android:padding="24dp"
         android:visibility="gone">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="아이 기기에 이 코드를 입력하세요"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp" />
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="20dp"/>
 
-        <TextView
-            android:id="@+id/tvPairingCode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="48sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.3"
-            android:layout_marginBottom="32dp" />
-
-        <Button
-            android:id="@+id/btnCodeDone"
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.ForMyKids.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="완료" />
+            android:layout_marginBottom="24dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="24dp">
+
+                <TextView
+                    android:id="@+id/tvPairingCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="42sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.3"
+                    android:textColor="@color/primary"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="코드는 5분 후 만료됩니다"
+                    android:textColor="@color/text_hint"
+                    android:textSize="11sp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCodeDone"
+            style="@style/Widget.ForMyKids.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="연결 완료"/>
     </LinearLayout>
 
     <!-- Child flow -->
     <LinearLayout
         android:id="@+id/layoutChild"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
+        android:padding="24dp"
         android:visibility="gone">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="부모 기기에서 받은 6자리 코드를 입력하세요"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp" />
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginBottom="24dp"/>
 
-        <EditText
-            android:id="@+id/etCode"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.ForMyKids.TextInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="6자리 코드"
-            android:inputType="number"
-            android:maxLength="6"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="16dp">
 
-        <Button
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="6"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSubmitCode"
+            style="@style/Widget.ForMyKids.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="연결" />
+            android:layout_height="52dp"
+            android:text="연결"/>
     </LinearLayout>
+
 </LinearLayout>
