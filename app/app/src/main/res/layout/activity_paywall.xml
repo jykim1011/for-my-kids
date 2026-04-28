@@ -1,46 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp">
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="프리미엄 구독"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
-
-    <TextView
+    <!-- 상단 헤더 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="• 무제한 스트리밍\n• AI 위험 감지\n• 알림 이력 30일\n• 오디오 스니펫 저장"
-        android:textSize="16sp"
-        android:layout_marginBottom="32dp" />
+        android:background="@drawable/bg_paywall_header"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="36dp"
+        android:paddingBottom="28dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="월 4,900원"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="24dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⭐"
+            android:textSize="28sp"
+            android:layout_marginBottom="8dp"/>
 
-    <Button
-        android:id="@+id/btnSubscribe"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="프리미엄으로 업그레이드"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="무제한 모니터링을 시작하세요"
+            android:textColor="@color/white_70"
+            android:textSize="13sp"/>
+    </LinearLayout>
+
+    <!-- 기능 목록 + 가격 + 버튼 -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="구독 시작"
-        android:enabled="false"
-        android:layout_marginBottom="8dp" />
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/background_blue"
+            android:padding="20dp">
 
-    <Button
-        android:id="@+id/btnClose"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="닫기"
-        style="@style/Widget.AppCompat.Button.Borderless" />
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.ForMyKids.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="4dp">
+
+                    <include layout="@layout/item_feature_row" android:id="@+id/row1"/>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+                    <include layout="@layout/item_feature_row" android:id="@+id/row2"/>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+                    <include layout="@layout/item_feature_row" android:id="@+id/row3"/>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+                    <include layout="@layout/item_feature_row" android:id="@+id/row4"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="bottom"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="24dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₩4,900"
+                    android:textColor="@color/primary"
+                    android:textSize="28sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" / 월"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:paddingBottom="4dp"/>
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSubscribe"
+                style="@style/Widget.ForMyKids.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="구독 시작하기"
+                android:enabled="false"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:id="@+id/btnClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="닫기"
+                android:textColor="@color/text_hint"
+                android:textSize="13sp"
+                android:padding="8dp"
+                android:layout_gravity="center_horizontal"
+                android:clickable="true"
+                android:focusable="true"/>
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.formykids.App
+import com.formykids.R
 import com.formykids.databinding.ActivityPaywallBinding
 import kotlinx.coroutines.launch
 
@@ -16,6 +17,17 @@ class PaywallActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPaywallBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        listOf(
+            binding.row1, binding.row2, binding.row3, binding.row4
+        ).zip(listOf(
+            "무제한 스트리밍",
+            "AI 위험 감지 알림",
+            "알림 이력 30일 보관",
+            "오디오 스니펫 저장"
+        )).forEach { (row, text) ->
+            row.tvFeature.text = text
+        }
 
         val prefs = getSharedPreferences(App.PREF_NAME, MODE_PRIVATE)
         val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL)!!
