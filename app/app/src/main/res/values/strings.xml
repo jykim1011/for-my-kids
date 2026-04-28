@@ -44,4 +44,11 @@
     <string name="hint_six_digit_code">6자리 코드</string>
     <string name="btn_submit_code">연결</string>
     <string name="listen_subtitle">탭하여 아이 소리 듣기</string>
+    <string name="paywall_title">프리미엄으로 업그레이드</string>
+    <string name="paywall_subtitle">무제한 모니터링을 시작하세요</string>
+    <string name="paywall_price">₩4,900</string>
+    <string name="paywall_price_period"> / 월</string>
+    <string name="btn_subscribe">구독 시작하기</string>
+    <string name="btn_close">닫기</string>
+    <string name="check_mark">✓</string>
 </resources>

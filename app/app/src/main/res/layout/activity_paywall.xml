@@ -27,7 +27,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="프리미엄으로 업그레이드"
+            android:text="@string/paywall_title"
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -36,7 +36,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="무제한 모니터링을 시작하세요"
+            android:text="@string/paywall_subtitle"
             android:textColor="@color/white_70"
             android:textSize="13sp"/>
     </LinearLayout>
@@ -83,14 +83,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="₩4,900"
+                    android:text="@string/paywall_price"
                     android:textColor="@color/primary"
                     android:textSize="28sp"
                     android:textStyle="bold"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text=" / 월"
+                    android:text="@string/paywall_price_period"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:paddingBottom="4dp"/>
@@ -101,7 +101,7 @@
                 style="@style/Widget.ForMyKids.Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:text="구독 시작하기"
+                android:text="@string/btn_subscribe"
                 android:enabled="false"
                 android:layout_marginBottom="12dp"/>
 
@@ -109,7 +109,7 @@
                 android:id="@+id/btnClose"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="닫기"
+                android:text="@string/btn_close"
                 android:textColor="@color/text_hint"
                 android:textSize="13sp"
                 android:padding="8dp"
