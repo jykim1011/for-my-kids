@@ -4,7 +4,6 @@
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorPrimaryContainer">@color/primary_pale</item>
         <item name="colorSurface">@color/white</item>
-        <item name="android:colorBackground">@color/background_blue</item>
         <item name="android:windowBackground">@color/background_blue</item>
     </style>
 
@@ -24,7 +23,7 @@
 
     <!-- Primary Button -->
     <style name="Widget.ForMyKids.Button.Primary" parent="Widget.Material3.Button">
-        <item name="android:backgroundTint">@color/primary</item>
+        <item name="backgroundTint">@color/primary</item>
         <item name="cornerRadius">10dp</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textStyle">bold</item>
