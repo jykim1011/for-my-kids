@@ -27,9 +27,12 @@ class AlertHistoryFragment : Fragment() {
 
         lifecycleScope.launch {
             if (!FirestoreManager.isPremium()) {
-                binding.rvAlerts.adapter = AlertAdapter(requireContext(), emptyList())
+                binding.rvAlerts.visibility = View.GONE
+                binding.cardUpgrade.visibility = View.VISIBLE
                 return@launch
             }
+            binding.rvAlerts.visibility = View.VISIBLE
+            binding.cardUpgrade.visibility = View.GONE
             val user = FirestoreManager.getCurrentUser() ?: return@launch
             val familyId = user["familyId"] as? String ?: return@launch
             val alerts = FirestoreManager.getAlerts(familyId)
