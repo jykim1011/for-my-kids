@@ -12,7 +12,7 @@ import com.formykids.databinding.ActivityParentBinding
 import com.formykids.settings.SettingsActivity
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -85,7 +85,7 @@ class ParentActivity : AppCompatActivity() {
             val vol = (VolumeAnalyzer.rms(pcm) * 100).toInt().coerceIn(0, 100)
             runOnUiThread { binding.progressVolume.progress = vol }
         }
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             val idToken = Firebase.auth.currentUser
                 ?.getIdToken(false)?.await()?.token ?: return@launch
             val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
