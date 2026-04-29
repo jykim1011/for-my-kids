@@ -45,7 +45,7 @@ class AlertAdapter(private val context: Context, private val items: List<Map<Str
             "cry" -> 0xFFF59E0B.toInt()
             else -> 0xFF2563EB.toInt()
         }
-        (holder.binding.tvAlertType.background as? GradientDrawable)?.setColor(chipColor)
+        (holder.binding.tvAlertType.background.mutate() as? GradientDrawable)?.setColor(chipColor)
     }
 
     override fun getItemCount() = items.size
