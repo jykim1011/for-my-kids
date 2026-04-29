@@ -21,10 +21,10 @@ class PaywallActivity : AppCompatActivity() {
         listOf(
             binding.row1, binding.row2, binding.row3, binding.row4
         ).zip(listOf(
-            "무제한 스트리밍",
-            "AI 위험 감지 알림",
-            "알림 이력 30일 보관",
-            "오디오 스니펫 저장"
+            getString(R.string.feature_unlimited_streaming),
+            getString(R.string.feature_ai_detection),
+            getString(R.string.feature_alert_history),
+            getString(R.string.feature_audio_snippet)
         )).forEach { (row, text) ->
             row.tvFeature.text = text
         }
@@ -35,7 +35,7 @@ class PaywallActivity : AppCompatActivity() {
         billing = BillingManager(this, serverUrl)
         billing.onPurchaseSuccess = {
             runOnUiThread {
-                Toast.makeText(this, "구독이 시작되었습니다!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.subscription_started), Toast.LENGTH_SHORT).show()
                 setResult(RESULT_OK)
                 finish()
             }

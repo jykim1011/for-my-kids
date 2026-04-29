@@ -8,7 +8,7 @@
     <string name="status_connected">연결됨</string>
     <string name="status_disconnected">연결 중단</string>
     <string name="child_status_idle">대기 중</string>
-    <string name="child_status_streaming">아이: 전송 중 🎙️</string>
+    <string name="child_status_streaming">아이: 전송 중</string>
     <string name="other_parent_listening">다른 보호자도 듣는 중</string>
     <string name="protecting">보호 중</string>
     <string name="notification_channel">ForMyKids</string>
@@ -63,4 +63,11 @@
     <string name="alert_type_cry">울음</string>
     <string name="alert_type_loud">큰소리</string>
     <string name="alert_confidence_format">신뢰도 %d%%</string>
+    <string name="alert_history_locked_title">프리미엄 전용 기능</string>
+    <string name="alert_history_locked_desc">알림 이력은 프리미엄 플랜에서 이용 가능합니다</string>
+    <string name="feature_unlimited_streaming">무제한 스트리밍</string>
+    <string name="feature_ai_detection">AI 위험 감지 알림</string>
+    <string name="feature_alert_history">알림 이력 30일 보관</string>
+    <string name="feature_audio_snippet">오디오 스니펫 저장</string>
+    <string name="subscription_started">구독이 시작되었습니다!</string>
 </resources>
