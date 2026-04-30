@@ -52,7 +52,11 @@ class AudioStreamService : Service() {
                 ?.getIdToken(false)?.await()?.token ?: return@launch
             val prefs = getSharedPreferences(App.PREF_NAME, MODE_PRIVATE)
             val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL)!!
-            WebSocketManager.connectWithAuth(serverUrl, idToken) { _ ->
+            WebSocketManager.connectWithAuth(
+                serverUrl,
+                idToken,
+                tokenRefresher = { Firebase.auth.currentUser?.getIdToken(true)?.await()?.token }
+            ) { _ ->
                 connectionCallback?.invoke(true)
             }
             WebSocketManager.onDisconnected = { connectionCallback?.invoke(false) }
@@ -97,7 +101,7 @@ class AudioStreamService : Service() {
         val minBuf = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         val bufSize = maxOf(minBuf, 6400)
         val recorder = AudioRecord(
-            MediaRecorder.AudioSource.MIC, sampleRate,
+            MediaRecorder.AudioSource.VOICE_COMMUNICATION, sampleRate,
             AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufSize
         )
         recorder.startRecording()
