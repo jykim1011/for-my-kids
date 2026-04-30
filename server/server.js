@@ -108,6 +108,9 @@ wss.on('connection', (ws) => {
           if (session.child && session.child !== ws) session.child.close(1000, 'replaced');
           session.child = ws;
           session.childUid = uid;
+          if (session.listeningParents.size > 0) {
+            safeSend(ws, JSON.stringify({ type: 'start_stream' }));
+          }
           // Load streaming quota from Firestore into memory
           const subDoc = await getFirestore().collection('subscriptions').doc(uid).get();
           const sub = subDoc.data() ?? {};

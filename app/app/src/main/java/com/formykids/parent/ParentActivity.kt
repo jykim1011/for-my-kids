@@ -65,6 +65,9 @@ class ParentActivity : AppCompatActivity() {
             runOnUiThread {
                 binding.tvServerStatus.text = getString(R.string.status_connected)
             }
+            if (listening) {
+                WebSocketManager.send("""{"type":"start_listen"}""")
+            }
         }
         WebSocketManager.onDisconnected = {
             runOnUiThread { binding.tvServerStatus.text = getString(R.string.status_disconnected) }
@@ -90,7 +93,11 @@ class ParentActivity : AppCompatActivity() {
                 ?.getIdToken(false)?.await()?.token ?: return@launch
             val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
             val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL) ?: App.DEFAULT_SERVER_URL
-            WebSocketManager.connectWithAuth(serverUrl, idToken) { /* familyId */ }
+            WebSocketManager.connectWithAuth(
+                serverUrl,
+                idToken,
+                tokenRefresher = { Firebase.auth.currentUser?.getIdToken(true)?.await()?.token }
+            ) { }
         }
     }
 
