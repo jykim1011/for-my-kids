@@ -13,6 +13,7 @@
     <string name="protecting">보호 중</string>
     <string name="notification_channel">ForMyKids</string>
     <string name="notification_text">보호 중</string>
+    <string name="notification_listening">아이 소리 듣는 중</string>
     <string name="app_slogan">아이를 안전하게 지켜드립니다</string>
     <string name="phone_auth_title">전화번호 인증</string>
     <string name="phone_auth_desc">본인 확인을 위해 전화번호를 입력해 주세요</string>

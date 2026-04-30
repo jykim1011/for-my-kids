@@ -21,8 +21,6 @@ import org.json.JSONObject
 class ParentActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityParentBinding
-    private var player: AudioPlayer? = null
-    private var listening = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,21 +41,31 @@ class ParentActivity : AppCompatActivity() {
         }
 
         binding.btnListen.setOnClickListener {
-            listening = !listening
-            if (listening) {
-                player = AudioPlayer()
-                WebSocketManager.send("""{"type":"start_listen"}""")
-                binding.tvListenLabel.text = getString(R.string.listen_stop)
-                binding.tvChildStatus.text = getString(R.string.child_status_streaming)
-            } else {
-                player?.release()
-                player = null
-                WebSocketManager.send("""{"type":"stop_listen"}""")
+            if (AudioListenService.isListening) {
+                startService(Intent(this, AudioListenService::class.java).setAction(AudioListenService.ACTION_STOP))
                 binding.tvListenLabel.text = getString(R.string.listen_start)
                 binding.tvChildStatus.text = getString(R.string.child_status_idle)
                 binding.progressVolume.progress = 0
+            } else {
+                startService(Intent(this, AudioListenService::class.java).setAction(AudioListenService.ACTION_START))
+                binding.tvListenLabel.text = getString(R.string.listen_stop)
+                binding.tvChildStatus.text = getString(R.string.child_status_streaming)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AudioListenService.onVolumeUpdate = { vol -> binding.progressVolume.progress = vol }
+        val listening = AudioListenService.isListening
+        binding.tvListenLabel.text = if (listening) getString(R.string.listen_stop) else getString(R.string.listen_start)
+        binding.tvChildStatus.text = if (listening) getString(R.string.child_status_streaming) else getString(R.string.child_status_idle)
+        if (!listening) binding.progressVolume.progress = 0
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AudioListenService.onVolumeUpdate = null
     }
 
     private fun setupWebSocket() {
@@ -65,7 +73,7 @@ class ParentActivity : AppCompatActivity() {
             runOnUiThread {
                 binding.tvServerStatus.text = getString(R.string.status_connected)
             }
-            if (listening) {
+            if (AudioListenService.isListening) {
                 WebSocketManager.send("""{"type":"start_listen"}""")
             }
         }
@@ -82,12 +90,6 @@ class ParentActivity : AppCompatActivity() {
                 }
             }
         }
-        WebSocketManager.onBinaryMessage = { bytes ->
-            val pcm = bytes.toByteArray()
-            player?.write(pcm)
-            val vol = (VolumeAnalyzer.rms(pcm) * 100).toInt().coerceIn(0, 100)
-            runOnUiThread { binding.progressVolume.progress = vol }
-        }
         lifecycleScope.launch(Dispatchers.IO) {
             val idToken = Firebase.auth.currentUser
                 ?.getIdToken(false)?.await()?.token ?: return@launch
@@ -102,8 +104,9 @@ class ParentActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        player?.release()
-        WebSocketManager.disconnect()
+        if (!AudioListenService.isListening) {
+            WebSocketManager.disconnect()
+        }
         super.onDestroy()
     }
 }
