@@ -1,1 +1,41 @@
+# Worktrees
 .worktrees/
+
+# Local tooling
+.superpowers/
+
+# Screenshots
+p1.jpg
+
+# Android
+*.iml
+.gradle/
+local.properties
+app/.idea/caches/
+app/.idea/libraries/
+app/.idea/modules.xml
+app/.idea/workspace.xml
+app/.idea/navEditor.xml
+app/.idea/assetWizardSettings.xml
+.DS_Store
+app/app/build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+app/.kotlin/
+
+# Sensitive - Firebase
+server/firebase-service-account.json
+server/.env
+
+# Server dependencies
+server/node_modules/
+
+# IDE
+.idea/workspace.xml
+.idea/caches/
+
+# Images/screenshots
+*.jpg
+*.png

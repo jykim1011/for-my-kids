@@ -1,19 +1,23 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "for-my-kids-placeholder",
-    "storage_bucket": "for-my-kids-placeholder.appspot.com"
+    "project_number": "429051749858",
+    "project_id": "for-my-kids-88f2b",
+    "storage_bucket": "for-my-kids-88f2b.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+        "mobilesdk_app_id": "1:429051749858:android:260e653ab8d0393b73c5bb",
         "android_client_info": {
           "package_name": "com.formykids"
         }
       },
       "oauth_client": [],
-      "api_key": [{"current_key": "placeholder_key"}],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4zfPlDhEqjVSBDyPtTdAlMp6Y7vf4BCM"
+        }
+      ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": []
