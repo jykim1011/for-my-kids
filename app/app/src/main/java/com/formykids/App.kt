@@ -21,6 +21,7 @@ class App : Application() {
         const val DANGER_CHANNEL_ID = "danger_alerts"
         const val PREF_NAME = "for_my_kids_prefs"
         const val PREF_SERVER_URL = "server_url"
+        const val PREF_WELCOME_SHOWN = "welcome_shown"
         const val DEFAULT_SERVER_URL = "wss://family-monitor-relay-tz6prc3acq-du.a.run.app"
         const val ROLE_PARENT = "parent"
         const val ROLE_CHILD = "child"
