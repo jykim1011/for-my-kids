@@ -29,6 +29,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".auth.WelcomeActivity" android:exported="false" />
         <activity android:name=".auth.OnboardingActivity" android:exported="false" />
         <activity android:name=".auth.RoleSelectActivity" android:exported="false" />
         <activity android:name=".auth.PairingActivity" android:exported="false" />
