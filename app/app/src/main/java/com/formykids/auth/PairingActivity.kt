@@ -11,6 +11,7 @@ import com.formykids.child.ChildActivity
 import com.formykids.databinding.ActivityPairingBinding
 import com.formykids.parent.ParentActivity
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
@@ -32,7 +33,26 @@ class PairingActivity : AppCompatActivity() {
     }
 
     private fun setupParentFlow() {
-        binding.layoutParent.visibility = View.VISIBLE
+        binding.layoutParentChoice.visibility = View.VISIBLE
+
+        binding.btnCreateFamily.setOnClickListener {
+            binding.layoutParentChoice.visibility = View.GONE
+            binding.layoutParent.visibility = View.VISIBLE
+            createNewFamily()
+        }
+
+        binding.btnJoinFamily.setOnClickListener {
+            binding.layoutParentChoice.visibility = View.GONE
+            binding.layoutParentJoin.visibility = View.VISIBLE
+        }
+
+        binding.btnSubmitInviteCode.setOnClickListener {
+            val code = binding.etInviteCode.text.toString().trim()
+            lifecycleScope.launch { joinAsParent(code) }
+        }
+    }
+
+    private fun createNewFamily() {
         val code = String.format("%06d", Random.nextInt(1000000))
         binding.tvPairingCode.text = code
         lifecycleScope.launch {
@@ -84,5 +104,29 @@ class PairingActivity : AppCompatActivity() {
         )).await()
         startActivity(Intent(this, ChildActivity::class.java))
         finish()
+    }
+
+    private suspend fun joinAsParent(code: String) {
+        val snap = db.collection("families")
+            .whereEqualTo("inviteCode", code)
+            .whereGreaterThan("inviteExpiresAt", System.currentTimeMillis())
+            .get().await()
+        if (snap.isEmpty) {
+            runOnUiThread { Toast.makeText(this, "코드가 올바르지 않거나 만료되었습니다", Toast.LENGTH_SHORT).show() }
+            return
+        }
+        val familyDoc = snap.documents.first()
+        val familyId = familyDoc.id
+        familyDoc.reference.update("parentUids", FieldValue.arrayUnion(uid)).await()
+        db.collection("users").document(uid).set(mapOf(
+            "role" to App.ROLE_PARENT,
+            "familyId" to familyId,
+            "fcmToken" to "",
+            "createdAt" to System.currentTimeMillis()
+        )).await()
+        runOnUiThread {
+            startActivity(Intent(this, ParentActivity::class.java))
+            finish()
+        }
     }
 }

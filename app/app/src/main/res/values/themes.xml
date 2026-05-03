@@ -5,6 +5,8 @@
         <item name="colorPrimaryContainer">@color/primary_pale</item>
         <item name="colorSurface">@color/white</item>
         <item name="android:windowBackground">@color/background_blue</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
     </style>
 
     <style name="Theme.ForMyKids" parent="Base.Theme.ForMyKids" />

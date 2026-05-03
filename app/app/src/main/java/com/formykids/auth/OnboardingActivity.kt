@@ -24,7 +24,13 @@ class OnboardingActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnSendCode.setOnClickListener {
-            val phone = binding.etPhone.text.toString().trim()
+            val phone = binding.etPhone.text.toString().filter { it.isDigit() }
+            if (phone.isEmpty()) {
+                Toast.makeText(this, "전화번호를 입력하세요", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            binding.btnSendCode.isEnabled = false
+            binding.btnSendCode.text = "전송 중..."
             sendVerificationCode("+82${phone.removePrefix("0")}")
         }
 
@@ -46,10 +52,16 @@ class OnboardingActivity : AppCompatActivity() {
                     signInWithCredential(credential)
                 }
                 override fun onVerificationFailed(e: FirebaseException) {
+                    binding.tilPhone.visibility = View.VISIBLE
+                    binding.btnSendCode.visibility = View.VISIBLE
+                    binding.btnSendCode.isEnabled = true
+                    binding.btnSendCode.text = getString(com.formykids.R.string.send_code)
                     Toast.makeText(this@OnboardingActivity, "인증 실패: ${e.message}", Toast.LENGTH_LONG).show()
                 }
                 override fun onCodeSent(vid: String, token: PhoneAuthProvider.ForceResendingToken) {
                     verificationId = vid
+                    binding.tilPhone.visibility = View.GONE
+                    binding.btnSendCode.visibility = View.GONE
                     binding.layoutCodeEntry.visibility = View.VISIBLE
                 }
             })

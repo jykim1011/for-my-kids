@@ -25,7 +25,11 @@ object FirestoreManager {
         return db.collection("subscriptions").document(uid).get().await().data
     }
 
+    private val adminPhoneNumbers = setOf("+821052221011", "+821020330612")
+
     suspend fun isPremium(): Boolean {
+        val phone = auth.currentUser?.phoneNumber
+        if (phone != null && phone in adminPhoneNumbers) return true
         val sub = getSubscription() ?: return false
         val plan = sub["plan"] as? String ?: return false
         val expiresAt = sub["expiresAt"] as? Long ?: return false

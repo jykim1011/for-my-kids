@@ -1,9 +1,13 @@
 package com.formykids.parent
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.formykids.App
 import com.formykids.R
@@ -11,12 +15,14 @@ import com.formykids.WebSocketManager
 import com.formykids.databinding.ActivityParentBinding
 import com.formykids.settings.SettingsActivity
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
+import kotlin.random.Random
 
 class ParentActivity : AppCompatActivity() {
 
@@ -38,6 +44,10 @@ class ParentActivity : AppCompatActivity() {
                 .replace(R.id.fragmentContainer, AlertHistoryFragment())
                 .addToBackStack(null)
                 .commit()
+        }
+
+        binding.btnInviteParent?.setOnClickListener {
+            generateAndShowInviteCode()
         }
 
         binding.btnListen.setOnClickListener {
@@ -101,6 +111,40 @@ class ParentActivity : AppCompatActivity() {
                 tokenRefresher = { Firebase.auth.currentUser?.getIdToken(true)?.await()?.token }
             ) { }
         }
+    }
+
+    private fun generateAndShowInviteCode() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val uid = Firebase.auth.currentUser?.uid ?: return@launch
+                val userDoc = Firebase.firestore.collection("users").document(uid).get().await()
+                val familyId = userDoc.getString("familyId") ?: return@launch
+                val code = String.format("%06d", Random.nextInt(1000000))
+                Firebase.firestore.collection("families").document(familyId)
+                    .update(mapOf(
+                        "inviteCode" to code,
+                        "inviteExpiresAt" to System.currentTimeMillis() + 600_000
+                    )).await()
+                runOnUiThread { showInviteDialog(code) }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this@ParentActivity, "초대코드 생성에 실패했습니다", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun showInviteDialog(code: String) {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.invite_code_title))
+            .setMessage("${getString(R.string.invite_code_message)}\n\n$code")
+            .setPositiveButton(getString(R.string.invite_code_copy)) { _, _ ->
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("invite_code", code))
+                Toast.makeText(this, getString(R.string.invite_code_copied), Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(getString(R.string.btn_close), null)
+            .show()
     }
 
     override fun onDestroy() {
