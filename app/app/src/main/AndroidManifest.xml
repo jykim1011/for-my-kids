@@ -57,6 +57,7 @@
 
         <activity android:name=".billing.PaywallActivity" android:exported="false" />
         <activity android:name=".settings.SettingsActivity" android:exported="false" />
+        <activity android:name=".settings.PhoneChangeActivity" android:exported="false" />
 
         <service
             android:name=".FcmService"

@@ -3,32 +3,34 @@ package com.formykids.settings
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.formykids.App
+import com.formykids.FirestoreManager
 import com.formykids.SplashActivity
+import com.formykids.child.DetectionScheduleReceiver
 import com.formykids.databinding.ActivitySettingsBinding
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
+    private var familyId: String? = null
+    private var detectionSettingsListener: ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val prefs = getSharedPreferences(App.PREF_NAME, MODE_PRIVATE)
-        binding.etServerUrl.setText(prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL))
-
-        binding.btnSaveUrl.setOnClickListener {
-            prefs.edit().putString(App.PREF_SERVER_URL, binding.etServerUrl.text.toString().trim()).apply()
-            finish()
-        }
+        setupPickers()
 
         binding.btnLogout.setOnClickListener {
             Firebase.auth.signOut()
-            prefs.edit().clear().apply()
+            getSharedPreferences(App.PREF_NAME, MODE_PRIVATE).edit().clear().apply()
             startActivity(Intent(this, SplashActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             })
@@ -38,8 +40,60 @@ class SettingsActivity : AppCompatActivity() {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions")))
         }
 
-        binding.btnBack.setOnClickListener {
-            finish()
+        binding.btnChangePhone.setOnClickListener {
+            startActivity(Intent(this, PhoneChangeActivity::class.java))
         }
+
+        binding.btnBack.setOnClickListener { finish() }
+
+        lifecycleScope.launch { loadUserSettings() }
+    }
+
+    private fun setupPickers() {
+        listOf(binding.pickerStartHour, binding.pickerEndHour).forEach { picker ->
+            picker.minValue = 0
+            picker.maxValue = 23
+            picker.displayedValues = Array(24) { "%02d:00".format(it) }
+        }
+        binding.pickerStartHour.value = 8
+        binding.pickerEndHour.value = 22
+    }
+
+    private suspend fun loadUserSettings() {
+        val user = FirestoreManager.getCurrentUser() ?: return
+        val role = user["role"] as? String ?: return
+        val fid = user["familyId"] as? String ?: return
+        familyId = fid
+
+        if (role == App.ROLE_PARENT) {
+            binding.sectionDetection.visibility = View.VISIBLE
+            detectionSettingsListener = FirestoreManager.observeDetectionSettings(fid) { enabled, schedule ->
+                runOnUiThread {
+                    binding.switchDetectionEnabled.isChecked = enabled
+                    schedule.firstOrNull()?.let { (start, end) ->
+                        binding.pickerStartHour.value = start
+                        binding.pickerEndHour.value = end
+                    }
+                }
+            }
+            binding.btnSaveDetectionSchedule.setOnClickListener {
+                val enabled = binding.switchDetectionEnabled.isChecked
+                val start = binding.pickerStartHour.value
+                val end = binding.pickerEndHour.value
+                lifecycleScope.launch {
+                    FirestoreManager.updateDetectionSettings(fid, enabled, listOf(start to end))
+                    DetectionScheduleReceiver.rescheduleAlarms(
+                        this@SettingsActivity,
+                        intArrayOf(start),
+                        intArrayOf(end)
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        detectionSettingsListener?.remove()
+        super.onDestroy()
     }
 }
