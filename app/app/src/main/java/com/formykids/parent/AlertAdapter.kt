@@ -1,8 +1,13 @@
 package com.formykids.parent
 
+import android.app.DownloadManager
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
+import android.media.MediaPlayer
+import android.net.Uri
+import android.os.Environment
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.formykids.R
@@ -46,6 +51,31 @@ class AlertAdapter(private val context: Context, private val items: List<Map<Str
             else -> 0xFF2563EB.toInt()
         }
         (holder.binding.tvAlertType.background.mutate() as? GradientDrawable)?.setColor(chipColor)
+
+        val clipUrl = alert["clipUrl"] as? String
+        holder.binding.layoutClipActions.visibility = if (clipUrl != null) View.VISIBLE else View.GONE
+
+        if (clipUrl != null) {
+            holder.binding.btnPlayClip.setOnClickListener {
+                val player = MediaPlayer()
+                player.setDataSource(clipUrl)
+                player.prepareAsync()
+                player.setOnPreparedListener { it.start() }
+                player.setOnCompletionListener { it.release() }
+            }
+            holder.binding.btnDownloadClip.setOnClickListener {
+                val req = DownloadManager.Request(Uri.parse(clipUrl)).apply {
+                    setTitle("ForMyKids_${fmt.format(Date(ts))}.m4a")
+                    setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    setDestinationInExternalPublicDir(
+                        Environment.DIRECTORY_DOWNLOADS,
+                        "ForMyKids_${ts}.m4a"
+                    )
+                }
+                (context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager)
+                    .enqueue(req)
+            }
+        }
     }
 
     override fun getItemCount() = items.size
