@@ -46,6 +46,10 @@ class ParentActivity : AppCompatActivity() {
                 .commit()
         }
 
+        binding.btnConnectChild?.setOnClickListener {
+            generateAndShowChildPairingCode()
+        }
+
         binding.btnInviteParent?.setOnClickListener {
             generateAndShowInviteCode()
         }
@@ -56,10 +60,25 @@ class ParentActivity : AppCompatActivity() {
                 binding.tvListenLabel.text = getString(R.string.listen_start)
                 binding.tvChildStatus.text = getString(R.string.child_status_idle)
                 binding.progressVolume.progress = 0
+                binding.layoutSpeaker.visibility = View.GONE
             } else {
                 startService(Intent(this, AudioListenService::class.java).setAction(AudioListenService.ACTION_START))
                 binding.tvListenLabel.text = getString(R.string.listen_stop)
                 binding.tvChildStatus.text = getString(R.string.child_status_streaming)
+                binding.layoutSpeaker.visibility = View.VISIBLE
+                binding.btnSpeaker.setImageResource(R.drawable.ic_volume_off)
+            }
+        }
+
+        binding.btnSpeaker.setOnClickListener {
+            if (AudioListenService.isSpeakerphone) {
+                startService(Intent(this, AudioListenService::class.java)
+                    .setAction(AudioListenService.ACTION_SPEAKER_OFF))
+                binding.btnSpeaker.setImageResource(R.drawable.ic_volume_off)
+            } else {
+                startService(Intent(this, AudioListenService::class.java)
+                    .setAction(AudioListenService.ACTION_SPEAKER_ON))
+                binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up)
             }
         }
     }
@@ -71,6 +90,15 @@ class ParentActivity : AppCompatActivity() {
         binding.tvListenLabel.text = if (listening) getString(R.string.listen_stop) else getString(R.string.listen_start)
         binding.tvChildStatus.text = if (listening) getString(R.string.child_status_streaming) else getString(R.string.child_status_idle)
         if (!listening) binding.progressVolume.progress = 0
+        if (listening) {
+            binding.layoutSpeaker.visibility = View.VISIBLE
+            binding.btnSpeaker.setImageResource(
+                if (AudioListenService.isSpeakerphone) R.drawable.ic_volume_up
+                else R.drawable.ic_volume_off
+            )
+        } else {
+            binding.layoutSpeaker.visibility = View.GONE
+        }
     }
 
     override fun onPause() {
@@ -110,6 +138,38 @@ class ParentActivity : AppCompatActivity() {
                 idToken,
                 tokenRefresher = { Firebase.auth.currentUser?.getIdToken(true)?.await()?.token }
             ) { }
+        }
+    }
+
+    private fun generateAndShowChildPairingCode() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val uid = Firebase.auth.currentUser?.uid ?: return@launch
+                val userDoc = Firebase.firestore.collection("users").document(uid).get().await()
+                val familyId = userDoc.getString("familyId") ?: return@launch
+                val code = String.format("%06d", Random.nextInt(1000000))
+                Firebase.firestore.collection("families").document(familyId)
+                    .update(mapOf(
+                        "pairingCode" to code,
+                        "pairingExpiresAt" to System.currentTimeMillis() + 600_000
+                    )).await()
+                runOnUiThread {
+                    AlertDialog.Builder(this@ParentActivity)
+                        .setTitle(getString(R.string.child_pairing_code_title))
+                        .setMessage("${getString(R.string.child_pairing_code_message)}\n\n$code")
+                        .setPositiveButton(getString(R.string.child_pairing_code_copy)) { _, _ ->
+                            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("pairing_code", code))
+                            Toast.makeText(this@ParentActivity, getString(R.string.child_pairing_code_copied), Toast.LENGTH_SHORT).show()
+                        }
+                        .setNegativeButton(getString(R.string.btn_close), null)
+                        .show()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this@ParentActivity, getString(R.string.child_pairing_code_failed), Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
