@@ -11,8 +11,19 @@ import androidx.core.app.NotificationCompat
 import com.formykids.App
 import com.formykids.FirestoreManager
 import com.formykids.R
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.*
+import kotlinx.coroutines.tasks.await
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.File
+import java.util.UUID
 
 class DangerDetectionService : Service() {
 
@@ -49,6 +60,7 @@ class DangerDetectionService : Service() {
         const val CLIP_BYTES = 320_000          // 10s × 16kHz × 2 bytes
         const val POST_DETECTION_CHUNKS = 50    // 5s at 100ms chunks
         const val VAD_THRESHOLD = 0.01f
+        val httpClient = OkHttpClient()
     }
 
     override fun onCreate() {
@@ -182,12 +194,51 @@ class DangerDetectionService : Service() {
         }
     }
 
-    // Clip encode/upload pipeline — implemented in Task 7
     private suspend fun uploadClipAndAlert(
         detection: com.formykids.DangerDetector.Detection,
         pcm: ByteArray
     ) {
-        // placeholder
+        val fid = familyId ?: return
+        val alertId = UUID.randomUUID().toString()
+        val clipFile = File(cacheDir, "clips/$alertId.m4a").also { it.parentFile?.mkdirs() }
+
+        try {
+            withContext(Dispatchers.Default) {
+                ClipEncoder.encodeToAac(pcm, clipFile)
+            }
+
+            val storageRef = Firebase.storage.reference.child("clips/$fid/$alertId.m4a")
+            storageRef.putFile(android.net.Uri.fromFile(clipFile)).await()
+            val clipUrl = storageRef.downloadUrl.await().toString()
+            val clipExpiresAt = System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000
+
+            FirestoreManager.saveAlert(fid, detection.type, detection.confidence, clipUrl, clipExpiresAt)
+
+            val idToken = Firebase.auth.currentUser?.getIdToken(false)?.await()?.token ?: return
+            triggerFcm(idToken, fid, detection.type, detection.confidence)
+        } catch (e: Exception) {
+            android.util.Log.e("DangerDetection", "Clip pipeline failed: ${e.message}")
+        } finally {
+            clipFile.delete()
+        }
+    }
+
+    private suspend fun triggerFcm(idToken: String, familyId: String, type: String, confidence: Float) {
+        val prefs = getSharedPreferences(App.PREF_NAME, MODE_PRIVATE)
+        val wsUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL)!!
+        val httpUrl = wsUrl.replaceFirst("wss://", "https://").replaceFirst("ws://", "http://") + "/alert"
+
+        val body = JSONObject().apply {
+            put("idToken", idToken)
+            put("familyId", familyId)
+            put("type", type)
+            put("confidence", confidence)
+        }.toString().toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder().url(httpUrl).post(body).build()
+        withContext(Dispatchers.IO) {
+            httpClient.newCall(request).execute().close()
+        }
     }
 
     override fun onDestroy() {
