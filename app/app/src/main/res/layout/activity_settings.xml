@@ -110,7 +110,7 @@
                     style="@style/Widget.ForMyKids.SectionLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="감지 설정"
+                    android:text="@string/section_detection"
                     android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.card.MaterialCardView
@@ -139,14 +139,14 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="상시 위기 감지"
+                                    android:text="@string/label_detection_enabled"
                                     android:textColor="@color/text_primary"
                                     android:textSize="13sp"
                                     android:textStyle="bold"/>
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="위험 감지 기능을 켜거나 끕니다"
+                                    android:text="@string/label_detection_enabled_desc"
                                     android:textColor="@color/text_hint"
                                     android:textSize="11sp"
                                     android:layout_marginTop="2dp"/>
@@ -161,7 +161,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="감지 시간대"
+                            android:text="@string/label_detection_schedule"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:layout_marginBottom="8dp"/>
@@ -177,7 +177,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="시작"
+                                android:text="@string/label_start_hour"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp"
                                 android:layout_marginEnd="8dp"/>
@@ -190,7 +190,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text=" ~ "
+                                android:text="@string/label_hour_separator"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="14sp"
                                 android:layout_marginStart="8dp"
@@ -199,7 +199,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="종료"
+                                android:text="@string/label_end_hour"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp"
                                 android:layout_marginEnd="8dp"/>
@@ -216,7 +216,7 @@
                             style="@style/Widget.ForMyKids.Button.Primary"
                             android:layout_width="match_parent"
                             android:layout_height="48dp"
-                            android:text="저장"/>
+                            android:text="@string/btn_save_detection_schedule"/>
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>

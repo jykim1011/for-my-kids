@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const { getOrCreate, removeClient, sessions } = require('./sessions');
-const { verifyIdToken, getFirestore } = require('./auth');
+const { verifyIdToken, getFirestore, getMessaging } = require('./auth');
 const { sendDangerAlert, TYPE_LABELS } = require('./fcm');
 const { verifySubscription } = require('./billing');
 
@@ -40,7 +40,7 @@ app.post('/verify-purchase', async (req, res) => {
 
 app.post('/alert', async (req, res) => {
   const { idToken, type, confidence, familyId } = req.body;
-  if (!idToken || !type || !familyId) return res.status(400).json({ error: 'missing fields' });
+  if (!idToken || !type || !familyId || confidence == null) return res.status(400).json({ error: 'missing fields' });
   try {
     const uid = await verifyIdToken(idToken);
     const userDoc = await getFirestore().collection('users').doc(uid).get();
@@ -52,7 +52,6 @@ app.post('/alert', async (req, res) => {
     }
     const parentTokens = await getParentFcmTokens(familyId);
     const typeLabel = TYPE_LABELS[type] ?? type;
-    const { getMessaging } = require('./auth');
     await Promise.all(parentTokens.map(token =>
       getMessaging().send({
         token,

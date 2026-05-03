@@ -63,7 +63,7 @@
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="재생"
+                    android:text="@string/btn_play_clip"
                     android:layout_marginEnd="8dp" />
 
                 <com.google.android.material.button.MaterialButton
@@ -71,7 +71,7 @@
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="다운로드" />
+                    android:text="@string/btn_download_clip" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

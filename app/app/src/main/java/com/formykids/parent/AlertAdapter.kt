@@ -62,6 +62,7 @@ class AlertAdapter(private val context: Context, private val items: List<Map<Str
                 player.prepareAsync()
                 player.setOnPreparedListener { it.start() }
                 player.setOnCompletionListener { it.release() }
+                player.setOnErrorListener { mp, _, _ -> mp.release(); true }
             }
             holder.binding.btnDownloadClip.setOnClickListener {
                 val req = DownloadManager.Request(Uri.parse(clipUrl)).apply {
