@@ -96,4 +96,19 @@
     <string name="welcome_role_child">아이 기기</string>
     <string name="welcome_role_child_desc">소리 감지·전송</string>
     <string name="welcome_btn_start">시작하기</string>
+    <!-- Detection settings -->
+    <string name="section_detection">감지 설정</string>
+    <string name="label_detection_enabled">상시 위기 감지</string>
+    <string name="label_detection_enabled_desc">부모 듣기 없이 아이 폰에서 독립 실행</string>
+    <string name="label_detection_schedule">감지 시간대</string>
+    <string name="label_start_hour">시작</string>
+    <string name="label_end_hour">종료</string>
+    <string name="label_hour_separator">~</string>
+    <string name="btn_save_detection_schedule">저장</string>
+    <!-- DangerDetectionService notifications -->
+    <string name="detection_active">위기 감지 중</string>
+    <string name="detection_standby">감지 대기 중</string>
+    <!-- Alert clip actions -->
+    <string name="btn_play_clip">재생</string>
+    <string name="btn_download_clip">다운로드</string>
 </resources>

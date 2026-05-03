@@ -101,7 +101,7 @@ class DangerDetectionService : Service() {
     }
 
     private fun buildNotification(active: Boolean): Notification {
-        val text = if (active) "위기 감지 중" else "감지 대기 중"
+        val text = if (active) getString(R.string.detection_active) else getString(R.string.detection_standby)
         return NotificationCompat.Builder(this, App.NOTIFICATION_CHANNEL_ID)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
