@@ -37,12 +37,14 @@ class DangerDetectionService : Service() {
     private var settingsListener: ListenerRegistration? = null
 
     private val ringBuffer = RingBuffer(RING_BUFFER_BYTES)
-    private var dangerDetector: com.formykids.DangerDetector? = null
-    private var postDetectionChunksLeft = 0
-    private var pendingDetection: com.formykids.DangerDetector.Detection? = null
+    @Volatile private var dangerDetector: com.formykids.DangerDetector? = null
+    @Volatile private var postDetectionChunksLeft = 0
+    @Volatile private var pendingDetection: com.formykids.DangerDetector.Detection? = null
 
     var inferenceIntervalMs = 2000L
         private set
+
+    private var batteryReceiverRegistered = false
 
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -56,9 +58,11 @@ class DangerDetectionService : Service() {
         const val NOTIFICATION_ID = 2
         const val ACTION_START_DETECTION = "com.formykids.ACTION_START_DETECTION"
         const val ACTION_STOP_DETECTION = "com.formykids.ACTION_STOP_DETECTION"
+        // Ring buffer holds 15s. After detection, we record 5s more (POST_DETECTION_CHUNKS).
+        // read(CLIP_BYTES) then extracts the last 10s = 5s pre-detection + 5s post-detection.
         const val RING_BUFFER_BYTES = 480_000   // 15s × 16kHz × 2 bytes
         const val CLIP_BYTES = 320_000          // 10s × 16kHz × 2 bytes
-        const val POST_DETECTION_CHUNKS = 50    // 5s at 100ms chunks
+        const val POST_DETECTION_CHUNKS = 50    // 5s post-detection at 100ms chunks
         const val VAD_THRESHOLD = 0.01f
         val httpClient = OkHttpClient()
     }
@@ -67,6 +71,7 @@ class DangerDetectionService : Service() {
         super.onCreate()
         startForeground(NOTIFICATION_ID, buildNotification(false))
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        batteryReceiverRegistered = true
         scope.launch { loadFamilyIdAndStartListener() }
     }
 
@@ -121,12 +126,16 @@ class DangerDetectionService : Service() {
 
     internal fun stopDetection() {
         detecting = false
-        detectionJob?.cancel()
-        dangerDetector?.close()
-        dangerDetector = null
-        postDetectionChunksLeft = 0
-        pendingDetection = null
-        updateNotification(false)
+        val job = detectionJob
+        detectionJob = null
+        scope.launch {
+            job?.cancelAndJoin()
+            dangerDetector?.close()
+            dangerDetector = null
+            postDetectionChunksLeft = 0
+            pendingDetection = null
+            updateNotification(false)
+        }
     }
 
     private fun updateNotification(active: Boolean) {
@@ -148,6 +157,10 @@ class DangerDetectionService : Service() {
             android.media.AudioFormat.ENCODING_PCM_16BIT,
             maxOf(minBuf, 6400)
         )
+        if (recorder.state != android.media.AudioRecord.STATE_INITIALIZED) {
+            recorder.release()
+            return
+        }
         recorder.startRecording()
 
         val chunk = ByteArray(3200)  // 100ms at 16kHz
@@ -189,7 +202,9 @@ class DangerDetectionService : Service() {
                 }
             }
         } finally {
-            recorder.stop()
+            if (recorder.recordingState == android.media.AudioRecord.RECORDSTATE_RECORDING) {
+                recorder.stop()
+            }
             recorder.release()
         }
     }
@@ -210,6 +225,8 @@ class DangerDetectionService : Service() {
             val storageRef = Firebase.storage.reference.child("clips/$fid/$alertId.m4a")
             storageRef.putFile(android.net.Uri.fromFile(clipFile)).await()
             val clipUrl = storageRef.downloadUrl.await().toString()
+            // clipExpiresAt is stored for client-side display. Actual Storage deletion requires
+            // a Firebase Storage lifecycle rule or Cloud Function; configure in Firebase console.
             val clipExpiresAt = System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000
 
             FirestoreManager.saveAlert(fid, detection.type, detection.confidence, clipUrl, clipExpiresAt)
@@ -244,7 +261,7 @@ class DangerDetectionService : Service() {
     override fun onDestroy() {
         stopDetection()
         settingsListener?.remove()
-        unregisterReceiver(batteryReceiver)
+        if (batteryReceiverRegistered) unregisterReceiver(batteryReceiver)
         scope.cancel()
         super.onDestroy()
     }

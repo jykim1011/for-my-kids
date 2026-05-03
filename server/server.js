@@ -38,11 +38,31 @@ app.post('/verify-purchase', async (req, res) => {
   }
 });
 
+const ALERT_TYPE_ALLOWLIST = new Set(['scream', 'cry', 'loud']);
+const alertRateLimits = new Map(); // uid -> { count, windowStart }
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 10;
+
+function checkAlertRateLimit(uid) {
+  const now = Date.now();
+  const entry = alertRateLimits.get(uid) ?? { count: 0, windowStart: now };
+  if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    alertRateLimits.set(uid, { count: 1, windowStart: now });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  alertRateLimits.set(uid, entry);
+  return true;
+}
+
 app.post('/alert', async (req, res) => {
   const { idToken, type, confidence, familyId } = req.body;
   if (!idToken || !type || !familyId || confidence == null) return res.status(400).json({ error: 'missing fields' });
+  if (!ALERT_TYPE_ALLOWLIST.has(type)) return res.status(400).json({ error: 'invalid type' });
   try {
     const uid = await verifyIdToken(idToken);
+    if (!checkAlertRateLimit(uid)) return res.status(429).json({ error: 'rate limit exceeded' });
     const userDoc = await getFirestore().collection('users').doc(uid).get();
     if (userDoc.data()?.familyId !== familyId) return res.status(403).json({ error: 'forbidden' });
     const subDoc = await getFirestore().collection('subscriptions').doc(uid).get();
@@ -178,6 +198,11 @@ wss.on('connection', (ws) => {
       if (session.listeningParents.size === 0) safeSend(session.child, JSON.stringify({ type: 'stop_stream' }));
       session.parents.forEach(p => safeSend(p, JSON.stringify({ type: 'status', listeningCount: session.listeningParents.size })));
     } else if (msg.type === 'danger_alert' && meta.role === 'child') {
+      // LEGACY PATH: kept for backward compatibility only. The child app no longer sends
+      // 'danger_alert' over WebSocket after migrating to DangerDetectionService.
+      // DangerDetectionService uses HTTP POST to /alert instead, which writes to Firestore
+      // AND sends FCM. This handler only sends FCM (no Firestore write) and will not be
+      // triggered by current app versions — there is no duplicate alert overlap.
       // Only premium children can trigger FCM danger alerts
       if (session.plan !== 'premium') return;
       const parentTokens = await getParentFcmTokens(meta.familyId);

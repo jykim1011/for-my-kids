@@ -20,6 +20,7 @@ class AlertAdapter(private val context: Context, private val items: List<Map<Str
     RecyclerView.Adapter<AlertAdapter.ViewHolder>() {
 
     private val fmt = SimpleDateFormat("MM/dd HH:mm", Locale.KOREA)
+    private var currentPlayer: MediaPlayer? = null
 
     inner class ViewHolder(val binding: ItemAlertBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -57,12 +58,20 @@ class AlertAdapter(private val context: Context, private val items: List<Map<Str
 
         if (clipUrl != null) {
             holder.binding.btnPlayClip.setOnClickListener {
+                currentPlayer?.release()
+                currentPlayer = null
                 val player = MediaPlayer()
-                player.setDataSource(clipUrl)
+                try {
+                    player.setDataSource(clipUrl)
+                } catch (e: Exception) {
+                    player.release()
+                    return@setOnClickListener
+                }
+                currentPlayer = player
                 player.prepareAsync()
                 player.setOnPreparedListener { it.start() }
-                player.setOnCompletionListener { it.release() }
-                player.setOnErrorListener { mp, _, _ -> mp.release(); true }
+                player.setOnCompletionListener { it.release(); if (currentPlayer === it) currentPlayer = null }
+                player.setOnErrorListener { mp, _, _ -> mp.release(); if (currentPlayer === mp) currentPlayer = null; true }
             }
             holder.binding.btnDownloadClip.setOnClickListener {
                 val req = DownloadManager.Request(Uri.parse(clipUrl)).apply {
@@ -80,4 +89,10 @@ class AlertAdapter(private val context: Context, private val items: List<Map<Str
     }
 
     override fun getItemCount() = items.size
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        currentPlayer?.release()
+        currentPlayer = null
+        super.onDetachedFromRecyclerView(recyclerView)
+    }
 }
