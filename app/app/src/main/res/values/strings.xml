@@ -123,4 +123,6 @@
     <!-- Alert clip actions -->
     <string name="btn_play_clip">재생</string>
     <string name="btn_download_clip">다운로드</string>
+    <!-- Speakerphone toggle -->
+    <string name="speaker_toggle">스피커폰 전환</string>
 </resources>
