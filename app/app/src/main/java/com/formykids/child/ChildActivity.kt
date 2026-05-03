@@ -54,6 +54,8 @@ class ChildActivity : AppCompatActivity() {
     private fun startAudioService() {
         val intent = Intent(this, AudioStreamService::class.java)
         ContextCompat.startForegroundService(this, intent)
+        val detectionIntent = Intent(this, DangerDetectionService::class.java)
+        ContextCompat.startForegroundService(this, detectionIntent)
     }
 
     override fun onRequestPermissionsResult(rc: Int, perms: Array<out String>, results: IntArray) {

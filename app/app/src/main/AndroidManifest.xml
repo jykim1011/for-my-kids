@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <uses-sdk tools:overrideLibrary="org.tensorflow.lite.support" />
 
@@ -44,6 +46,11 @@
             android:exported="false" />
 
         <service
+            android:name=".child.DangerDetectionService"
+            android:foregroundServiceType="microphone"
+            android:exported="false" />
+
+        <service
             android:name=".parent.AudioListenService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false" />
@@ -58,6 +65,16 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <receiver
+            android:name=".child.DetectionScheduleReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.formykids.SCHEDULE_START_DETECTION" />
+                <action android:name="com.formykids.SCHEDULE_STOP_DETECTION" />
+            </intent-filter>
+        </receiver>
 
     </application>
 </manifest>
