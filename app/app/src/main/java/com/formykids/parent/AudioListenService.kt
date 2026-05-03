@@ -1,7 +1,9 @@
 package com.formykids.parent
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.formykids.App
@@ -12,20 +14,29 @@ import okio.ByteString
 class AudioListenService : Service() {
 
     private var player: AudioPlayer? = null
+    private lateinit var audioManager: AudioManager
 
     companion object {
         const val ACTION_START = "com.formykids.ACTION_START_LISTEN"
         const val ACTION_STOP = "com.formykids.ACTION_STOP_LISTEN"
+        const val ACTION_SPEAKER_ON = "com.formykids.ACTION_SPEAKER_ON"
+        const val ACTION_SPEAKER_OFF = "com.formykids.ACTION_SPEAKER_OFF"
         private const val NOTIFICATION_ID = 2
 
         @Volatile var isListening = false
+        @Volatile var isSpeakerphone = false
         var onVolumeUpdate: ((Int) -> Unit)? = null
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!::audioManager.isInitialized) {
+            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        }
         when (intent?.action) {
             ACTION_START -> startListening()
             ACTION_STOP -> stopListening()
+            ACTION_SPEAKER_ON -> setSpeaker(true)
+            ACTION_SPEAKER_OFF -> setSpeaker(false)
         }
         return START_NOT_STICKY
     }
@@ -33,6 +44,9 @@ class AudioListenService : Service() {
     private fun startListening() {
         if (isListening) return
         isListening = true
+        audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+        audioManager.isSpeakerphoneOn = false
+        isSpeakerphone = false
         player = AudioPlayer()
         WebSocketManager.send("""{"type":"start_listen"}""")
         WebSocketManager.onBinaryMessage = { bytes: ByteString ->
@@ -47,12 +61,21 @@ class AudioListenService : Service() {
     private fun stopListening() {
         if (!isListening) return
         isListening = false
+        audioManager.isSpeakerphoneOn = false
+        audioManager.mode = AudioManager.MODE_NORMAL
+        isSpeakerphone = false
         WebSocketManager.onBinaryMessage = null
         WebSocketManager.send("""{"type":"stop_listen"}""")
         player?.release()
         player = null
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    private fun setSpeaker(on: Boolean) {
+        if (!isListening) return
+        audioManager.isSpeakerphoneOn = on
+        isSpeakerphone = on
     }
 
     private fun buildNotification(): Notification {
