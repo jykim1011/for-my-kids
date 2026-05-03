@@ -25,6 +25,11 @@ class DangerDetectionService : Service() {
         private set
     private var settingsListener: ListenerRegistration? = null
 
+    private val ringBuffer = RingBuffer(RING_BUFFER_BYTES)
+    private var dangerDetector: com.formykids.DangerDetector? = null
+    private var postDetectionChunksLeft = 0
+    private var pendingDetection: com.formykids.DangerDetector.Detection? = null
+
     var inferenceIntervalMs = 2000L
         private set
 
@@ -96,18 +101,93 @@ class DangerDetectionService : Service() {
     internal suspend fun startDetection() {
         detecting = true
         updateNotification(true)
-        // Detection loop added in Task 6
+        if (dangerDetector == null) {
+            dangerDetector = com.formykids.DangerDetector(this@DangerDetectionService)
+        }
+        detectionJob = scope.launch { captureLoop() }
     }
 
     internal fun stopDetection() {
         detecting = false
         detectionJob?.cancel()
+        dangerDetector?.close()
+        dangerDetector = null
+        postDetectionChunksLeft = 0
+        pendingDetection = null
         updateNotification(false)
     }
 
     private fun updateNotification(active: Boolean) {
         getSystemService(NotificationManager::class.java)
             .notify(NOTIFICATION_ID, buildNotification(active))
+    }
+
+    private suspend fun captureLoop() {
+        val sampleRate = 16000
+        val minBuf = android.media.AudioRecord.getMinBufferSize(
+            sampleRate,
+            android.media.AudioFormat.CHANNEL_IN_MONO,
+            android.media.AudioFormat.ENCODING_PCM_16BIT
+        )
+        val recorder = android.media.AudioRecord(
+            android.media.MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+            sampleRate,
+            android.media.AudioFormat.CHANNEL_IN_MONO,
+            android.media.AudioFormat.ENCODING_PCM_16BIT,
+            maxOf(minBuf, 6400)
+        )
+        recorder.startRecording()
+
+        val chunk = ByteArray(3200)  // 100ms at 16kHz
+        var lastInferenceTime = 0L
+
+        try {
+            while (detecting && currentCoroutineContext().isActive) {
+                val read = recorder.read(chunk, 0, chunk.size)
+                if (read <= 0) continue
+
+                val data = chunk.copyOf(read)
+                ringBuffer.write(data)
+
+                // Post-detection countdown: record 5s after detection before extracting clip
+                if (postDetectionChunksLeft > 0) {
+                    postDetectionChunksLeft--
+                    if (postDetectionChunksLeft == 0) {
+                        val det = pendingDetection
+                        pendingDetection = null
+                        if (det != null) {
+                            val pcm = ringBuffer.read(CLIP_BYTES)
+                            scope.launch { uploadClipAndAlert(det, pcm) }
+                        }
+                    }
+                }
+
+                // VAD + inference at configured interval
+                val now = System.currentTimeMillis()
+                if (now - lastInferenceTime >= inferenceIntervalMs && postDetectionChunksLeft == 0) {
+                    lastInferenceTime = now
+                    val sample = ringBuffer.read(com.formykids.DangerDetector.SAMPLE_SIZE * 2)
+                    if (ClipEncoder.calculateRms(sample) > VAD_THRESHOLD) {
+                        val detection = dangerDetector?.analyze(sample)
+                        if (detection != null) {
+                            pendingDetection = detection
+                            postDetectionChunksLeft = POST_DETECTION_CHUNKS
+                        }
+                    }
+                }
+            }
+        } finally {
+            recorder.stop()
+            recorder.release()
+        }
+    }
+
+    // Clip encode/upload pipeline — implemented in Task 7
+    private suspend fun uploadClipAndAlert(
+        detection: com.formykids.DangerDetector.Detection,
+        pcm: ByteArray
+    ) {
+        // placeholder
     }
 
     override fun onDestroy() {
