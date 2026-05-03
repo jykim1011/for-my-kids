@@ -71,6 +71,7 @@ class ParentActivity : AppCompatActivity() {
         }
 
         binding.btnSpeaker.setOnClickListener {
+            binding.btnSpeaker.isEnabled = false
             if (AudioListenService.isSpeakerphone) {
                 startService(Intent(this, AudioListenService::class.java)
                     .setAction(AudioListenService.ACTION_SPEAKER_OFF))
@@ -85,13 +86,14 @@ class ParentActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        AudioListenService.onVolumeUpdate = { vol -> binding.progressVolume.progress = vol }
+        AudioListenService.onVolumeUpdate = { vol -> runOnUiThread { binding.progressVolume.progress = vol } }
         val listening = AudioListenService.isListening
         binding.tvListenLabel.text = if (listening) getString(R.string.listen_stop) else getString(R.string.listen_start)
         binding.tvChildStatus.text = if (listening) getString(R.string.child_status_streaming) else getString(R.string.child_status_idle)
         if (!listening) binding.progressVolume.progress = 0
         if (listening) {
             binding.layoutSpeaker.visibility = View.VISIBLE
+            binding.btnSpeaker.isEnabled = true
             binding.btnSpeaker.setImageResource(
                 if (AudioListenService.isSpeakerphone) R.drawable.ic_volume_up
                 else R.drawable.ic_volume_off

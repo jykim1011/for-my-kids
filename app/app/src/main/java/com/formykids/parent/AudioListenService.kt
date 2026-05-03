@@ -15,6 +15,7 @@ class AudioListenService : Service() {
 
     private var player: AudioPlayer? = null
     private lateinit var audioManager: AudioManager
+    private var savedAudioMode = AudioManager.MODE_NORMAL
 
     companion object {
         const val ACTION_START = "com.formykids.ACTION_START_LISTEN"
@@ -44,6 +45,7 @@ class AudioListenService : Service() {
     private fun startListening() {
         if (isListening) return
         isListening = true
+        savedAudioMode = audioManager.mode
         audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
         audioManager.isSpeakerphoneOn = false
         isSpeakerphone = false
@@ -62,7 +64,7 @@ class AudioListenService : Service() {
         if (!isListening) return
         isListening = false
         audioManager.isSpeakerphoneOn = false
-        audioManager.mode = AudioManager.MODE_NORMAL
+        audioManager.mode = savedAudioMode
         isSpeakerphone = false
         WebSocketManager.onBinaryMessage = null
         WebSocketManager.send("""{"type":"stop_listen"}""")
