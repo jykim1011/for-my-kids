@@ -181,6 +181,28 @@
                     android:layout_marginTop="4dp"/>
             </LinearLayout>
 
+            <!-- Speaker toggle row (visible only when listening) -->
+            <LinearLayout
+                android:id="@+id/layoutSpeaker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="-12dp"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone">
+
+                <ImageButton
+                    android:id="@+id/btnSpeaker"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_volume_off"
+                    android:background="@drawable/bg_listen_button"
+                    android:contentDescription="@string/speaker_toggle"
+                    android:scaleType="centerInside"
+                    android:padding="10dp"/>
+            </LinearLayout>
+
             <!-- Volume card -->
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.ForMyKids.Card"
@@ -274,6 +296,63 @@
                             android:textColor="@color/text_hint"
                             android:textSize="11sp"
                             android:visibility="gone"/>
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="@null"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Connect child card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnConnectChild"
+                style="@style/Widget.ForMyKids.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:clickable="true"
+                android:focusable="true">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="14dp"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_icon_circle"
+                        android:padding="8dp"
+                        android:layout_marginEnd="12dp">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_shield"
+                            android:contentDescription="@null"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/btn_connect_child"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/connect_child_desc"
+                            android:textColor="@color/text_hint"
+                            android:textSize="11sp"/>
                     </LinearLayout>
 
                     <ImageView
