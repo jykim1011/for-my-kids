@@ -22,4 +22,4 @@ async function sendDangerAlert({ fcmToken, type, confidence, familyId, timestamp
   });
 }
 
-module.exports = { sendDangerAlert };
+module.exports = { sendDangerAlert, TYPE_LABELS };

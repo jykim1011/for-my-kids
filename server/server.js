@@ -4,7 +4,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const { getOrCreate, removeClient, sessions } = require('./sessions');
 const { verifyIdToken, getFirestore } = require('./auth');
-const { sendDangerAlert } = require('./fcm');
+const { sendDangerAlert, TYPE_LABELS } = require('./fcm');
 const { verifySubscription } = require('./billing');
 
 const app = express();
@@ -34,6 +34,36 @@ app.post('/verify-purchase', async (req, res) => {
     );
     res.json({ ok: true, expiresAt });
   } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.post('/alert', async (req, res) => {
+  const { idToken, type, confidence, familyId } = req.body;
+  if (!idToken || !type || !familyId) return res.status(400).json({ error: 'missing fields' });
+  try {
+    const uid = await verifyIdToken(idToken);
+    const userDoc = await getFirestore().collection('users').doc(uid).get();
+    if (userDoc.data()?.familyId !== familyId) return res.status(403).json({ error: 'forbidden' });
+    const subDoc = await getFirestore().collection('subscriptions').doc(uid).get();
+    const sub = subDoc.data() ?? {};
+    if (sub.plan !== 'premium' || sub.expiresAt <= Date.now()) {
+      return res.status(403).json({ error: 'premium required' });
+    }
+    const parentTokens = await getParentFcmTokens(familyId);
+    const typeLabel = TYPE_LABELS[type] ?? type;
+    const { getMessaging } = require('./auth');
+    await Promise.all(parentTokens.map(token =>
+      getMessaging().send({
+        token,
+        notification: { title: '⚠️ 위험 감지', body: `${typeLabel} 소리가 감지되었습니다` },
+        data: { type, confidence: String(confidence), familyId },
+        android: { priority: 'high', notification: { channelId: 'danger_alerts' } },
+      })
+    ));
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('/alert error:', e.message);
     res.status(400).json({ error: e.message });
   }
 });
