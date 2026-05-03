@@ -2,6 +2,7 @@ package com.formykids
 
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
@@ -38,5 +39,54 @@ object FirestoreManager {
             .limit(50)
             .get().await()
             .documents.map { it.data ?: emptyMap() }
+    }
+
+    suspend fun saveAlert(
+        familyId: String,
+        type: String,
+        confidence: Float,
+        clipUrl: String?,
+        clipExpiresAt: Long?
+    ): String {
+        val data = mutableMapOf<String, Any>(
+            "familyId" to familyId,
+            "timestamp" to System.currentTimeMillis(),
+            "type" to type,
+            "confidence" to confidence.toDouble()
+        )
+        clipUrl?.let { data["clipUrl"] = it }
+        clipExpiresAt?.let { data["clipExpiresAt"] = it }
+        return db.collection("alerts").add(data).await().id
+    }
+
+    fun observeDetectionSettings(
+        familyId: String,
+        onUpdate: (enabled: Boolean, schedule: List<Pair<Int, Int>>) -> Unit
+    ): ListenerRegistration {
+        return db.collection("families").document(familyId)
+            .addSnapshotListener { snapshot, _ ->
+                val enabled = snapshot?.getBoolean("detectionEnabled") ?: false
+                @Suppress("UNCHECKED_CAST")
+                val raw = snapshot?.get("detectionSchedule") as? List<Map<String, Any>> ?: emptyList()
+                val schedule = raw.map { m ->
+                    val start = (m["startHour"] as? Long)?.toInt() ?: 0
+                    val end = (m["endHour"] as? Long)?.toInt() ?: 24
+                    start to end
+                }
+                onUpdate(enabled, schedule)
+            }
+    }
+
+    suspend fun updateDetectionSettings(
+        familyId: String,
+        enabled: Boolean,
+        schedule: List<Pair<Int, Int>>
+    ) {
+        val scheduleData = schedule.map { (start, end) ->
+            mapOf("startHour" to start, "endHour" to end)
+        }
+        db.collection("families").document(familyId)
+            .update(mapOf("detectionEnabled" to enabled, "detectionSchedule" to scheduleData))
+            .await()
     }
 }
