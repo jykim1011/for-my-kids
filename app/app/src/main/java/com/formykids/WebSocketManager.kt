@@ -97,13 +97,17 @@ object WebSocketManager {
     private fun scheduleReconnect() {
         if (!shouldReconnect) return
         reconnectJob = scope.launch {
-            val delayMs = minOf(1000L shl reconnectAttempts, 30000L)
-            reconnectAttempts++
-            delay(delayMs)
-            if (!shouldReconnect) return@launch
-            val fresh = tokenRefresher?.invoke()
-            if (fresh != null) idToken = fresh
-            openSocket()
+            try {
+                val delayMs = minOf(1000L shl reconnectAttempts, 30000L)
+                reconnectAttempts++
+                delay(delayMs)
+                if (!shouldReconnect) return@launch
+                try {
+                    val fresh = tokenRefresher?.invoke()
+                    if (fresh != null) idToken = fresh
+                } catch (_: Exception) {}
+                openSocket()
+            } catch (_: Exception) {}
         }
     }
 }

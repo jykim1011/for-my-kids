@@ -48,29 +48,33 @@ class AudioStreamService : Service() {
 
     private fun setupWebSocket() {
         scope.launch {
-            val idToken = Firebase.auth.currentUser
-                ?.getIdToken(false)?.await()?.token ?: return@launch
-            val prefs = getSharedPreferences(App.PREF_NAME, MODE_PRIVATE)
-            val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL)!!
-            WebSocketManager.connectWithAuth(
-                serverUrl,
-                idToken,
-                tokenRefresher = { Firebase.auth.currentUser?.getIdToken(true)?.await()?.token }
-            ) { _ ->
-                connectionCallback?.invoke(true)
-            }
-            WebSocketManager.onDisconnected = { connectionCallback?.invoke(false) }
-            WebSocketManager.onTextMessage = { text ->
-                val msg = JSONObject(text)
-                when (msg.optString("type")) {
-                    "start_stream" -> startStreaming()
-                    "stop_stream" -> stopStreaming()
-                    "stream_limit_reached" -> {
-                        stopStreaming()
-                        statusCallback?.invoke(false)
-                        limitCallback?.invoke()
+            try {
+                val idToken = Firebase.auth.currentUser
+                    ?.getIdToken(false)?.await()?.token ?: return@launch
+                val prefs = getSharedPreferences(App.PREF_NAME, MODE_PRIVATE)
+                val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL)!!
+                WebSocketManager.connectWithAuth(
+                    serverUrl,
+                    idToken,
+                    tokenRefresher = { Firebase.auth.currentUser?.getIdToken(true)?.await()?.token }
+                ) { _ ->
+                    connectionCallback?.invoke(true)
+                }
+                WebSocketManager.onDisconnected = { connectionCallback?.invoke(false) }
+                WebSocketManager.onTextMessage = { text ->
+                    val msg = JSONObject(text)
+                    when (msg.optString("type")) {
+                        "start_stream" -> startStreaming()
+                        "stop_stream" -> stopStreaming()
+                        "stream_limit_reached" -> {
+                            stopStreaming()
+                            statusCallback?.invoke(false)
+                            limitCallback?.invoke()
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("AudioStream", "WebSocket setup failed: ${e.message}")
             }
         }
     }

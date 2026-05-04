@@ -72,12 +72,20 @@ class DangerDetectionService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification(false))
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         batteryReceiverRegistered = true
-        scope.launch { loadFamilyIdAndStartListener() }
+        scope.launch {
+            try { loadFamilyIdAndStartListener() } catch (e: Exception) {
+                android.util.Log.e("DangerDetection", "loadFamily failed: ${e.message}")
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_START_DETECTION -> if (!detecting) scope.launch { startDetection() }
+            ACTION_START_DETECTION -> if (!detecting) scope.launch {
+                try { startDetection() } catch (e: Exception) {
+                    android.util.Log.e("DangerDetection", "startDetection failed: ${e.message}")
+                }
+            }
             ACTION_STOP_DETECTION -> stopDetection()
         }
         return START_STICKY
@@ -90,7 +98,11 @@ class DangerDetectionService : Service() {
         settingsListener = FirestoreManager.observeDetectionSettings(fid) { enabled, schedule ->
             val withinSchedule = schedule.isEmpty() || isWithinSchedule(schedule)
             if (enabled && withinSchedule) {
-                if (!detecting) scope.launch { startDetection() }
+                if (!detecting) scope.launch {
+                    try { startDetection() } catch (e: Exception) {
+                        android.util.Log.e("DangerDetection", "startDetection failed: ${e.message}")
+                    }
+                }
             } else {
                 stopDetection()
             }
