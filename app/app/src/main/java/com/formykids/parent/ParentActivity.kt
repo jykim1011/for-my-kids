@@ -135,15 +135,21 @@ class ParentActivity : AppCompatActivity() {
             }
         }
         lifecycleScope.launch(Dispatchers.IO) {
-            val idToken = Firebase.auth.currentUser
-                ?.getIdToken(false)?.await()?.token ?: return@launch
-            val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
-            val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL) ?: App.DEFAULT_SERVER_URL
-            WebSocketManager.connectWithAuth(
-                serverUrl,
-                idToken,
-                tokenRefresher = { Firebase.auth.currentUser?.getIdToken(true)?.await()?.token }
-            ) { }
+            try {
+                val idToken = Firebase.auth.currentUser
+                    ?.getIdToken(false)?.await()?.token ?: return@launch
+                val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
+                val serverUrl = prefs.getString(App.PREF_SERVER_URL, App.DEFAULT_SERVER_URL) ?: App.DEFAULT_SERVER_URL
+                WebSocketManager.connectWithAuth(
+                    serverUrl,
+                    idToken,
+                    tokenRefresher = {
+                        try {
+                            Firebase.auth.currentUser?.getIdToken(true)?.await()?.token
+                        } catch (_: Exception) { null }
+                    }
+                ) { }
+            } catch (_: Exception) { }
         }
     }
 
@@ -157,7 +163,8 @@ class ParentActivity : AppCompatActivity() {
                 Firebase.firestore.collection("families").document(familyId)
                     .update(mapOf(
                         "pairingCode" to code,
-                        "pairingExpiresAt" to System.currentTimeMillis() + 600_000
+                        "pairingExpiresAt" to System.currentTimeMillis() + 600_000,
+                        "childUid" to null
                     )).await()
                 runOnUiThread {
                     AlertDialog.Builder(this@ParentActivity)
