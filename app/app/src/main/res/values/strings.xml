@@ -117,6 +117,7 @@
     <string name="label_end_hour">종료</string>
     <string name="label_hour_separator">~</string>
     <string name="btn_save_detection_schedule">저장</string>
+    <string name="detection_settings_saved">감지 설정이 저장되었습니다</string>
     <!-- DangerDetectionService notifications -->
     <string name="detection_active">위기 감지 중</string>
     <string name="detection_standby">감지 대기 중</string>

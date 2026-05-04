@@ -1,12 +1,14 @@
 package com.formykids.settings
 
 import android.content.Intent
+import android.widget.Toast
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.formykids.App
+import com.formykids.R
 import com.formykids.FirestoreManager
 import com.formykids.SplashActivity
 import com.formykids.child.DetectionScheduleReceiver
@@ -87,6 +89,7 @@ class SettingsActivity : AppCompatActivity() {
                         intArrayOf(start),
                         intArrayOf(end)
                     )
+                    Toast.makeText(this@SettingsActivity, getString(R.string.detection_settings_saved), Toast.LENGTH_SHORT).show()
                 }
             }
         }
