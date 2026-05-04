@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 자기 자신의 사용자 문서만 읽기/쓰기 가능
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 가족 문서
+    match /families/{familyId} {
+
+      // 가족 구성원(부모/아이)은 읽기 가능
+      // 페어링 중인 기기도 읽기 가능 (pairingCode 또는 inviteCode가 유효한 경우)
+      allow read: if request.auth != null && (
+        request.auth.uid in resource.data.parentUids ||
+        request.auth.uid == resource.data.childUid ||
+        (resource.data.pairingCode != null && resource.data.pairingCode != '') ||
+        (resource.data.inviteCode != null && resource.data.inviteCode != '')
+      );
+
+      // 인증된 사용자가 새 가족 생성 (본인이 parentUids에 포함되어야 함)
+      allow create: if request.auth != null &&
+        request.auth.uid in request.resource.data.parentUids;
+
+      // 업데이트 허용 조건
+      allow update: if request.auth != null && (
+        // 기존 부모: 모든 필드 수정 가능 (초대코드 생성, 설정 변경 등)
+        request.auth.uid in resource.data.parentUids ||
+
+        // 아이 연결: childUid가 아직 없고, childUid 필드만 변경하는 경우
+        (
+          (resource.data.childUid == null || resource.data.childUid == '') &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['childUid'])
+        ) ||
+
+        // 추가 부모 합류: parentUids에 본인 uid 추가만 허용
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parentUids']) &&
+          request.auth.uid in request.resource.data.parentUids &&
+          resource.data.parentUids.size() < request.resource.data.parentUids.size()
+        )
+      );
+    }
+
+    // 알림 기록: 가족 구성원만 읽기, 생성은 가족 구성원 허용, 수정/삭제는 차단
+    match /alerts/{alertId} {
+      allow read: if request.auth != null && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.keys().hasAll(['familyId']) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId == resource.data.familyId
+      );
+      allow create: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId == request.resource.data.familyId;
+      allow update, delete: if false;
+    }
+
+    // 구독 정보: 본인만 읽기, 쓰기는 서버만
+    match /subscriptions/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+  }
+}
