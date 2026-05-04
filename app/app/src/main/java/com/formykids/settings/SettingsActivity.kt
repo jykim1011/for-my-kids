@@ -11,6 +11,10 @@ import com.formykids.App
 import com.formykids.R
 import com.formykids.FirestoreManager
 import com.formykids.SplashActivity
+import com.formykids.auth.RoleSelectActivity
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.ktx.firestore
+import kotlinx.coroutines.tasks.await
 import com.formykids.child.DetectionScheduleReceiver
 import com.formykids.databinding.ActivitySettingsBinding
 import com.google.firebase.auth.ktx.auth
@@ -47,6 +51,30 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         binding.btnBack.setOnClickListener { finish() }
+
+        binding.btnResetDevice.setOnClickListener {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setMessage(getString(R.string.reset_device_confirm))
+                .setPositiveButton(getString(R.string.reset_device_confirm_yes)) { _, _ ->
+                    lifecycleScope.launch {
+                        try {
+                            val uid = Firebase.auth.currentUser?.uid
+                            if (uid != null) {
+                                Firebase.firestore.collection("users").document(uid)
+                                    .update(mapOf(
+                                        "role" to FieldValue.delete(),
+                                        "familyId" to FieldValue.delete()
+                                    )).await()
+                            }
+                        } catch (_: Exception) {}
+                        startActivity(Intent(this@SettingsActivity, RoleSelectActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        })
+                    }
+                }
+                .setNegativeButton(getString(R.string.btn_close), null)
+                .show()
+        }
 
         lifecycleScope.launch { loadUserSettings() }
     }

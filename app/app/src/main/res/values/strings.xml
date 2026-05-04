@@ -60,6 +60,10 @@
     <string name="label_manage_subscription_desc">Play Store에서 관리</string>
     <string name="section_account">계정</string>
     <string name="label_logout">로그아웃</string>
+    <string name="label_reset_device">기기 재설정</string>
+    <string name="label_reset_device_desc">역할 선택 화면으로 돌아갑니다</string>
+    <string name="reset_device_confirm">기기를 재설정하면 부모/아이 연결이 해제됩니다. 계속하시겠습니까?</string>
+    <string name="reset_device_confirm_yes">재설정</string>
     <string name="alert_type_scream">비명</string>
     <string name="alert_type_cry">울음</string>
     <string name="alert_type_loud">큰소리</string>
