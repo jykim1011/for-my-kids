@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -61,17 +62,18 @@ class ParentActivity : AppCompatActivity() {
                 binding.tvChildStatus.text = getString(R.string.child_status_idle)
                 binding.progressVolume.progress = 0
                 binding.layoutSpeaker.visibility = View.GONE
+                setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
             } else {
                 startService(Intent(this, AudioListenService::class.java).setAction(AudioListenService.ACTION_START))
                 binding.tvListenLabel.text = getString(R.string.listen_stop)
                 binding.tvChildStatus.text = getString(R.string.child_status_streaming)
                 binding.layoutSpeaker.visibility = View.VISIBLE
                 binding.btnSpeaker.setImageResource(R.drawable.ic_volume_off)
+                setVolumeControlStream(AudioManager.STREAM_VOICE_CALL)
             }
         }
 
         binding.btnSpeaker.setOnClickListener {
-            binding.btnSpeaker.isEnabled = false
             if (AudioListenService.isSpeakerphone) {
                 startService(Intent(this, AudioListenService::class.java)
                     .setAction(AudioListenService.ACTION_SPEAKER_OFF))
@@ -93,19 +95,21 @@ class ParentActivity : AppCompatActivity() {
         if (!listening) binding.progressVolume.progress = 0
         if (listening) {
             binding.layoutSpeaker.visibility = View.VISIBLE
-            binding.btnSpeaker.isEnabled = true
             binding.btnSpeaker.setImageResource(
                 if (AudioListenService.isSpeakerphone) R.drawable.ic_volume_up
                 else R.drawable.ic_volume_off
             )
+            setVolumeControlStream(AudioManager.STREAM_VOICE_CALL)
         } else {
             binding.layoutSpeaker.visibility = View.GONE
+            setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
         }
     }
 
     override fun onPause() {
         super.onPause()
         AudioListenService.onVolumeUpdate = null
+        setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
     }
 
     private fun setupWebSocket() {
