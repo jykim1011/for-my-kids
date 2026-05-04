@@ -48,7 +48,11 @@ class PairingActivity : AppCompatActivity() {
 
         binding.btnSubmitInviteCode.setOnClickListener {
             val code = binding.etInviteCode.text.toString().trim()
-            lifecycleScope.launch { joinAsParent(code) }
+            lifecycleScope.launch {
+                try { joinAsParent(code) } catch (e: Exception) {
+                    runOnUiThread { Toast.makeText(this@PairingActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show() }
+                }
+            }
         }
     }
 
@@ -56,19 +60,23 @@ class PairingActivity : AppCompatActivity() {
         val code = String.format("%06d", Random.nextInt(1000000))
         binding.tvPairingCode.text = code
         lifecycleScope.launch {
-            val familyRef = db.collection("families").document()
-            familyRef.set(mapOf(
-                "parentUids" to listOf(uid),
-                "childUid" to null,
-                "pairingCode" to code,
-                "pairingExpiresAt" to System.currentTimeMillis() + 600_000
-            )).await()
-            db.collection("users").document(uid).set(mapOf(
-                "role" to App.ROLE_PARENT,
-                "familyId" to familyRef.id,
-                "fcmToken" to "",
-                "createdAt" to System.currentTimeMillis()
-            )).await()
+            try {
+                val familyRef = db.collection("families").document()
+                familyRef.set(mapOf(
+                    "parentUids" to listOf(uid),
+                    "childUid" to null,
+                    "pairingCode" to code,
+                    "pairingExpiresAt" to System.currentTimeMillis() + 600_000
+                )).await()
+                db.collection("users").document(uid).set(mapOf(
+                    "role" to App.ROLE_PARENT,
+                    "familyId" to familyRef.id,
+                    "fcmToken" to "",
+                    "createdAt" to System.currentTimeMillis()
+                )).await()
+            } catch (e: Exception) {
+                runOnUiThread { Toast.makeText(this@PairingActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show() }
+            }
         }
         binding.btnCodeDone.setOnClickListener {
             startActivity(Intent(this, ParentActivity::class.java))
@@ -80,20 +88,26 @@ class PairingActivity : AppCompatActivity() {
         binding.layoutChild.visibility = View.VISIBLE
         binding.btnSubmitCode.setOnClickListener {
             val code = binding.etCode.text.toString().trim()
-            lifecycleScope.launch { submitCode(code) }
+            lifecycleScope.launch {
+                try { submitCode(code) } catch (e: Exception) {
+                    runOnUiThread { Toast.makeText(this@PairingActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show() }
+                }
+            }
         }
     }
 
     private suspend fun submitCode(code: String) {
         val snap = db.collection("families")
             .whereEqualTo("pairingCode", code)
-            .whereGreaterThan("pairingExpiresAt", System.currentTimeMillis())
             .get().await()
-        if (snap.isEmpty) {
+        val familyDocs = snap.documents.filter {
+            (it.getLong("pairingExpiresAt") ?: 0L) > System.currentTimeMillis()
+        }
+        if (familyDocs.isEmpty()) {
             runOnUiThread { Toast.makeText(this, "코드가 올바르지 않거나 만료되었습니다", Toast.LENGTH_SHORT).show() }
             return
         }
-        val familyDoc = snap.documents.first()
+        val familyDoc = familyDocs.first()
         val familyId = familyDoc.id
         familyDoc.reference.update("childUid", uid).await()
         db.collection("users").document(uid).set(mapOf(
@@ -109,13 +123,15 @@ class PairingActivity : AppCompatActivity() {
     private suspend fun joinAsParent(code: String) {
         val snap = db.collection("families")
             .whereEqualTo("inviteCode", code)
-            .whereGreaterThan("inviteExpiresAt", System.currentTimeMillis())
             .get().await()
-        if (snap.isEmpty) {
+        val familyDocs = snap.documents.filter {
+            (it.getLong("inviteExpiresAt") ?: 0L) > System.currentTimeMillis()
+        }
+        if (familyDocs.isEmpty()) {
             runOnUiThread { Toast.makeText(this, "코드가 올바르지 않거나 만료되었습니다", Toast.LENGTH_SHORT).show() }
             return
         }
-        val familyDoc = snap.documents.first()
+        val familyDoc = familyDocs.first()
         val familyId = familyDoc.id
         familyDoc.reference.update("parentUids", FieldValue.arrayUnion(uid)).await()
         db.collection("users").document(uid).set(mapOf(

@@ -137,6 +137,20 @@ class AudioStreamService : Service() {
         }
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val restart = PendingIntent.getService(
+            this, 0,
+            Intent(applicationContext, AudioStreamService::class.java),
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
+        (getSystemService(ALARM_SERVICE) as AlarmManager)
+            .set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000L, restart)
+    }
+
     override fun onDestroy() {
         stopStreaming()
         dangerDetector?.close()

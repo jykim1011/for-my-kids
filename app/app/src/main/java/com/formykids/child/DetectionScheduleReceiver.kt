@@ -26,6 +26,7 @@ class DetectionScheduleReceiver : BroadcastReceiver() {
     }
 
     private fun startDetectionService(context: Context) {
+        context.startForegroundService(Intent(context, AudioStreamService::class.java))
         context.startForegroundService(Intent(context, DangerDetectionService::class.java))
     }
 
