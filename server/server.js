@@ -65,11 +65,16 @@ app.post('/alert', async (req, res) => {
     if (!checkAlertRateLimit(uid)) return res.status(429).json({ error: 'rate limit exceeded' });
     const userDoc = await getFirestore().collection('users').doc(uid).get();
     if (userDoc.data()?.familyId !== familyId) return res.status(403).json({ error: 'forbidden' });
-    const subDoc = await getFirestore().collection('subscriptions').doc(uid).get();
-    const sub = subDoc.data() ?? {};
-    if (sub.plan !== 'premium' || sub.expiresAt <= Date.now()) {
-      return res.status(403).json({ error: 'premium required' });
-    }
+    const familyDoc = await getFirestore().collection('families').doc(familyId).get();
+    const parentUids = familyDoc.data()?.parentUids ?? [];
+    const subDocs = await Promise.all(
+      parentUids.map(pUid => getFirestore().collection('subscriptions').doc(pUid).get())
+    );
+    const hasPremium = subDocs.some(doc => {
+      const sub = doc.data() ?? {};
+      return sub.plan === 'premium' && sub.expiresAt > Date.now();
+    });
+    if (!hasPremium) return res.status(403).json({ error: 'premium required' });
     const parentTokens = await getParentFcmTokens(familyId);
     const typeLabel = TYPE_LABELS[type] ?? type;
     await Promise.all(parentTokens.map(token =>
