@@ -47,8 +47,8 @@ class AudioListenService : Service() {
         isListening = true
         savedAudioMode = audioManager.mode
         audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-        audioManager.isSpeakerphoneOn = false
-        isSpeakerphone = false
+        audioManager.isSpeakerphoneOn = true
+        isSpeakerphone = true
         player = AudioPlayer()
         WebSocketManager.send("""{"type":"start_listen"}""")
         WebSocketManager.onBinaryMessage = { bytes: ByteString ->

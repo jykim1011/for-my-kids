@@ -68,7 +68,7 @@ class ParentActivity : AppCompatActivity() {
                 binding.tvListenLabel.text = getString(R.string.listen_stop)
                 binding.tvChildStatus.text = getString(R.string.child_status_streaming)
                 binding.layoutSpeaker.visibility = View.VISIBLE
-                binding.btnSpeaker.setImageResource(R.drawable.ic_volume_off)
+                binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up)
                 setVolumeControlStream(AudioManager.STREAM_VOICE_CALL)
             }
         }
