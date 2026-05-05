@@ -3,7 +3,9 @@ package com.formykids.parent
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.formykids.App
@@ -47,7 +49,7 @@ class AudioListenService : Service() {
         isListening = true
         savedAudioMode = audioManager.mode
         audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-        audioManager.isSpeakerphoneOn = true
+        routeSpeaker(true)
         isSpeakerphone = true
         player = AudioPlayer()
         WebSocketManager.send("""{"type":"start_listen"}""")
@@ -63,7 +65,7 @@ class AudioListenService : Service() {
     private fun stopListening() {
         if (!isListening) return
         isListening = false
-        audioManager.isSpeakerphoneOn = false
+        routeSpeaker(false)
         audioManager.mode = savedAudioMode
         isSpeakerphone = false
         WebSocketManager.onBinaryMessage = null
@@ -76,8 +78,23 @@ class AudioListenService : Service() {
 
     private fun setSpeaker(on: Boolean) {
         if (!isListening) return
-        audioManager.isSpeakerphoneOn = on
+        routeSpeaker(on)
         isSpeakerphone = on
+    }
+
+    private fun routeSpeaker(on: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (on) {
+                audioManager.availableCommunicationDevices
+                    .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+                    ?.let { audioManager.setCommunicationDevice(it) }
+            } else {
+                audioManager.clearCommunicationDevice()
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager.isSpeakerphoneOn = on
+        }
     }
 
     private fun buildNotification(): Notification {
