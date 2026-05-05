@@ -2,12 +2,17 @@ package com.formykids.parent
 
 import android.media.*
 import kotlinx.coroutines.*
+import io.github.jaredmdobson.concentus.OpusDecoder
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 class AudioPlayer(private val seedChunks: Int = 3) {
 
     private val sampleRate = 16000
+    private val opusFrameSize = 320 // 20ms at 16kHz
+    private val decoder = OpusDecoder(sampleRate, 1)
     private val track: AudioTrack
-    private val jitterBuffer = AudioJitterBuffer()
+    private val jitterBuffer = AudioJitterBuffer(silenceChunk = ByteArray(640))
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
@@ -43,7 +48,15 @@ class AudioPlayer(private val seedChunks: Int = 3) {
         }
     }
 
-    fun write(pcmBytes: ByteArray) {
+    @Synchronized
+    fun write(opusBytes: ByteArray) {
+        val outShorts = ShortArray(opusFrameSize * 2)
+        val samples: Int = try {
+            decoder.decode(opusBytes, 0, opusBytes.size, outShorts, 0, opusFrameSize, false)
+        } catch (e: Exception) { return }
+        if (samples <= 0) return
+        val pcmBytes = ByteArray(samples * 2)
+        ByteBuffer.wrap(pcmBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(outShorts, 0, samples)
         jitterBuffer.offer(pcmBytes)
     }
 

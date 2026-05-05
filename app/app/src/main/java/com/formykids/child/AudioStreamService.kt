@@ -5,6 +5,10 @@ import android.content.Intent
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import io.github.jaredmdobson.concentus.OpusApplication
+import io.github.jaredmdobson.concentus.OpusEncoder
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.formykids.App
@@ -102,14 +106,22 @@ class AudioStreamService : Service() {
         }
 
         val sampleRate = 16000
+        val frameSize = 320 // 20ms at 16kHz
+        val frameSizeBytes = frameSize * 2 // 640 bytes
+
+        val encoder = OpusEncoder(sampleRate, 1, OpusApplication.OPUS_APPLICATION_VOIP)
+        encoder.setBitrate(24000)
+
         val minBuf = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
-        val bufSize = maxOf(minBuf, 6400)
+        val bufSize = maxOf(minBuf, frameSizeBytes * 4)
         val recorder = AudioRecord(
             MediaRecorder.AudioSource.VOICE_COMMUNICATION, sampleRate,
             AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufSize
         )
         recorder.startRecording()
-        val chunk = ByteArray(3200) // 100ms at 16kHz
+
+        val chunk = ByteArray(frameSizeBytes) // 640 bytes = 20ms
+        val opusOut = ByteArray(4000)
         val analysisBuffer = ByteArray(31200) // ~1s at 16kHz for YAMNet
         var analysisPos = 0
 
@@ -117,11 +129,18 @@ class AudioStreamService : Service() {
             while (streaming && currentCoroutineContext().isActive) {
                 val read = recorder.read(chunk, 0, chunk.size)
                 if (read > 0) {
-                    val data = chunk.copyOf(read)
-                    WebSocketManager.send(data)
+                    // Encode PCM → Opus
+                    val pcmShorts = ShortArray(read / 2)
+                    ByteBuffer.wrap(chunk, 0, read).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(pcmShorts)
+                    val encodedLen = try {
+                        encoder.encode(pcmShorts, 0, frameSize, opusOut, 0, opusOut.size)
+                    } catch (e: Exception) { 0 }
+                    if (encodedLen > 0) WebSocketManager.send(opusOut.copyOf(encodedLen))
+
+                    // YAMNet analysis uses raw PCM (before encoding)
                     if (isPremium) {
                         val toCopy = minOf(read, analysisBuffer.size - analysisPos)
-                        System.arraycopy(data, 0, analysisBuffer, analysisPos, toCopy)
+                        System.arraycopy(chunk, 0, analysisBuffer, analysisPos, toCopy)
                         analysisPos += toCopy
                         if (analysisPos >= analysisBuffer.size) {
                             analysisPos = 0

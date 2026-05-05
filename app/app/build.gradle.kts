@@ -67,6 +67,9 @@ dependencies {
     // Coroutines for tasks.await()
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.1")
 
+    // Opus audio codec (pure Java, no JNI)
+    implementation("io.github.jaredmdobson:concentus:1.0.2")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
