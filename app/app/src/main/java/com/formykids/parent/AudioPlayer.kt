@@ -14,6 +14,7 @@ class AudioPlayer(private val seedChunks: Int = 3) {
     private val track: AudioTrack
     private val jitterBuffer = AudioJitterBuffer(silenceChunk = ByteArray(640))
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    @Volatile var gainFactor: Float = 1.0f
 
     init {
         val minBuf = AudioTrack.getMinBufferSize(
@@ -59,6 +60,11 @@ class AudioPlayer(private val seedChunks: Int = 3) {
             decoder.decode(opusBytes, 0, opusBytes.size, outShorts, 0, opusFrameSize, false)
         } catch (e: Exception) { return }
         if (samples <= 0) return
+        if (gainFactor != 1.0f) {
+            for (i in 0 until samples) {
+                outShorts[i] = (outShorts[i] * gainFactor).toInt().coerceIn(-32767, 32767).toShort()
+            }
+        }
         val pcmBytes = ByteArray(samples * 2)
         ByteBuffer.wrap(pcmBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(outShorts, 0, samples)
         jitterBuffer.offer(pcmBytes)
