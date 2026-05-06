@@ -69,7 +69,7 @@ class ParentActivity : AppCompatActivity() {
                 binding.tvChildStatus.text = getString(R.string.child_status_streaming)
                 binding.layoutSpeaker.visibility = View.VISIBLE
                 binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up)
-                setVolumeControlStream(AudioManager.STREAM_VOICE_CALL)
+                setVolumeControlStream(AudioManager.STREAM_MUSIC)
             }
         }
 
@@ -99,7 +99,7 @@ class ParentActivity : AppCompatActivity() {
                 if (AudioListenService.isSpeakerphone) R.drawable.ic_volume_up
                 else R.drawable.ic_volume_off
             )
-            setVolumeControlStream(AudioManager.STREAM_VOICE_CALL)
+            setVolumeControlStream(AudioManager.STREAM_MUSIC)
         } else {
             binding.layoutSpeaker.visibility = View.GONE
             setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)

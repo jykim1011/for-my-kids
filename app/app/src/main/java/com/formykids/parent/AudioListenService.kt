@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
-import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.formykids.App
@@ -17,7 +16,6 @@ class AudioListenService : Service() {
 
     private var player: AudioPlayer? = null
     private lateinit var audioManager: AudioManager
-    private var savedAudioMode = AudioManager.MODE_NORMAL
 
     companion object {
         const val ACTION_START = "com.formykids.ACTION_START_LISTEN"
@@ -47,11 +45,9 @@ class AudioListenService : Service() {
     private fun startListening() {
         if (isListening) return
         isListening = true
-        savedAudioMode = audioManager.mode
-        audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-        routeSpeaker(true)
         isSpeakerphone = true
         player = AudioPlayer()
+        routeSpeaker(true)
         WebSocketManager.send("""{"type":"start_listen"}""")
         WebSocketManager.onBinaryMessage = { bytes: ByteString ->
             val pcm = bytes.toByteArray()
@@ -65,8 +61,6 @@ class AudioListenService : Service() {
     private fun stopListening() {
         if (!isListening) return
         isListening = false
-        routeSpeaker(false)
-        audioManager.mode = savedAudioMode
         isSpeakerphone = false
         WebSocketManager.onBinaryMessage = null
         WebSocketManager.send("""{"type":"stop_listen"}""")
@@ -83,18 +77,11 @@ class AudioListenService : Service() {
     }
 
     private fun routeSpeaker(on: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (on) {
-                audioManager.availableCommunicationDevices
-                    .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
-                    ?.let { audioManager.setCommunicationDevice(it) }
-            } else {
-                audioManager.clearCommunicationDevice()
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            audioManager.isSpeakerphoneOn = on
-        }
+        val device = if (on) {
+            audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+        } else null
+        player?.setPreferredDevice(device)
     }
 
     private fun buildNotification(): Notification {

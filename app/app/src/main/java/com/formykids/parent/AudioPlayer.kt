@@ -22,7 +22,7 @@ class AudioPlayer(private val seedChunks: Int = 3) {
         track = AudioTrack.Builder()
             .setAudioAttributes(
                 AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                     .build()
             )
@@ -38,6 +38,10 @@ class AudioPlayer(private val seedChunks: Int = 3) {
             .build()
         track.play()
         scope.launch { drainLoop() }
+    }
+
+    fun setPreferredDevice(device: AudioDeviceInfo?) {
+        track.preferredDevice = device
     }
 
     private suspend fun drainLoop() {
