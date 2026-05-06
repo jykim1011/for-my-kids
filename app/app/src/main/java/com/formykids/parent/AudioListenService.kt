@@ -27,6 +27,12 @@ class AudioListenService : Service() {
         @Volatile var isListening = false
         @Volatile var isSpeakerphone = false
         var onVolumeUpdate: ((Int) -> Unit)? = null
+        @Volatile var instance: AudioListenService? = null
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -84,6 +90,10 @@ class AudioListenService : Service() {
         player?.setPreferredDevice(device)
     }
 
+    fun setGain(factor: Float) {
+        player?.gainFactor = factor.coerceIn(1.0f, 3.0f)
+    }
+
     private fun buildNotification(): Notification {
         val stopIntent = Intent(this, AudioListenService::class.java).setAction(ACTION_STOP)
         val stopPi = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
@@ -102,6 +112,7 @@ class AudioListenService : Service() {
     }
 
     override fun onDestroy() {
+        instance = null
         if (isListening) stopListening()
         super.onDestroy()
     }
