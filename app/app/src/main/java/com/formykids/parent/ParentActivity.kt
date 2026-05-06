@@ -141,6 +141,7 @@ class ParentActivity : AppCompatActivity() {
         val savedProgress = prefs.getInt(PREF_GAIN_FACTOR, 0)
         binding.seekBarGain.progress = savedProgress
         binding.tvGainValue.text = progressToGainLabel(savedProgress)
+        AudioListenService.instance?.setGain(1.0f + (savedProgress / 20f) * 2.0f)
         setVolumeControlStream(AudioManager.STREAM_MUSIC)
     }
 
@@ -163,6 +164,7 @@ class ParentActivity : AppCompatActivity() {
             val savedProgress = prefs.getInt(PREF_GAIN_FACTOR, 0)
             binding.seekBarGain.progress = savedProgress
             binding.tvGainValue.text = progressToGainLabel(savedProgress)
+            AudioListenService.instance?.setGain(1.0f + (savedProgress / 20f) * 2.0f)
         } else {
             binding.layoutSpeaker.visibility = View.GONE
             setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
