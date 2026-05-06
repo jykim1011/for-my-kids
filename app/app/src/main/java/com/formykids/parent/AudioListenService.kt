@@ -92,8 +92,8 @@ class AudioListenService : Service() {
         }
         val openPi = PendingIntent.getActivity(this, 0, openIntent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(this, App.NOTIFICATION_CHANNEL_ID)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(getString(R.string.notification_listening))
+            .setContentTitle(getString(R.string.notification_listening_title))
+            .setContentText(getString(R.string.notification_listening_content))
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true)
             .setContentIntent(openPi)
