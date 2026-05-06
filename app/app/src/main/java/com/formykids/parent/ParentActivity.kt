@@ -69,12 +69,6 @@ class ParentActivity : AppCompatActivity() {
         binding.btnListen.setOnClickListener {
             if (AudioListenService.isListening) {
                 startService(Intent(this, AudioListenService::class.java).setAction(AudioListenService.ACTION_STOP))
-                binding.tvListenLabel.text = getString(R.string.listen_start)
-                binding.tvChildStatus.text = getString(R.string.child_status_idle)
-                binding.progressVolume.progress = 0
-                binding.layoutSpeaker.visibility = View.GONE
-                binding.cardGain.visibility = View.GONE
-                setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
             } else {
                 requestNotificationPermissionThenListen()
             }
@@ -138,46 +132,43 @@ class ParentActivity : AppCompatActivity() {
                 .setAction(AudioListenService.ACTION_START)
                 .putExtra(AudioListenService.EXTRA_GAIN_PROGRESS, savedProgress)
         )
-        binding.tvListenLabel.text = getString(R.string.listen_stop)
-        binding.tvChildStatus.text = getString(R.string.child_status_streaming)
-        binding.layoutSpeaker.visibility = View.VISIBLE
-        binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up)
-        binding.cardGain.visibility = View.VISIBLE
-        binding.seekBarGain.progress = savedProgress
-        binding.tvGainValue.text = progressToGainLabel(savedProgress)
-        setVolumeControlStream(AudioManager.STREAM_MUSIC)
     }
 
-    override fun onResume() {
-        super.onResume()
-        AudioListenService.onVolumeUpdate = { vol -> runOnUiThread { binding.progressVolume.progress = vol } }
-        val listening = AudioListenService.isListening
+    private fun applyListeningState(listening: Boolean) {
         binding.tvListenLabel.text = if (listening) getString(R.string.listen_stop) else getString(R.string.listen_start)
         binding.tvChildStatus.text = if (listening) getString(R.string.child_status_streaming) else getString(R.string.child_status_idle)
-        if (!listening) binding.progressVolume.progress = 0
         if (listening) {
             binding.layoutSpeaker.visibility = View.VISIBLE
             binding.btnSpeaker.setImageResource(
                 if (AudioListenService.isSpeakerphone) R.drawable.ic_volume_up
                 else R.drawable.ic_volume_off
             )
-            setVolumeControlStream(AudioManager.STREAM_MUSIC)
             binding.cardGain.visibility = View.VISIBLE
             val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
             val savedProgress = prefs.getInt(PREF_GAIN_FACTOR, 0)
             binding.seekBarGain.progress = savedProgress
             binding.tvGainValue.text = progressToGainLabel(savedProgress)
             AudioListenService.instance?.setGain(1.0f + (savedProgress / 20f) * 2.0f)
+            setVolumeControlStream(AudioManager.STREAM_MUSIC)
         } else {
+            binding.progressVolume.progress = 0
             binding.layoutSpeaker.visibility = View.GONE
-            setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
             binding.cardGain.visibility = View.GONE
+            setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AudioListenService.onVolumeUpdate = { vol -> runOnUiThread { binding.progressVolume.progress = vol } }
+        AudioListenService.onListeningChanged = { listening -> runOnUiThread { applyListeningState(listening) } }
+        applyListeningState(AudioListenService.isListening)
     }
 
     override fun onPause() {
         super.onPause()
         AudioListenService.onVolumeUpdate = null
+        AudioListenService.onListeningChanged = null
         setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
     }
 

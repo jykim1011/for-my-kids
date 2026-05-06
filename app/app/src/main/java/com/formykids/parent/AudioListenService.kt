@@ -28,6 +28,7 @@ class AudioListenService : Service() {
         @Volatile var isListening = false
         @Volatile var isSpeakerphone = false
         var onVolumeUpdate: ((Int) -> Unit)? = null
+        var onListeningChanged: ((Boolean) -> Unit)? = null
         @Volatile var instance: AudioListenService? = null
     }
 
@@ -66,12 +67,14 @@ class AudioListenService : Service() {
             onVolumeUpdate?.invoke(vol)
         }
         startForeground(NOTIFICATION_ID, buildNotification())
+        onListeningChanged?.invoke(true)
     }
 
     private fun stopListening() {
         if (!isListening) return
         isListening = false
         isSpeakerphone = false
+        onListeningChanged?.invoke(false)
         WebSocketManager.onBinaryMessage = null
         WebSocketManager.send("""{"type":"stop_listen"}""")
         player?.release()
