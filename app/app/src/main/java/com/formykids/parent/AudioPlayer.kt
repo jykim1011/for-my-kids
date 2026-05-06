@@ -41,7 +41,7 @@ class AudioPlayer(private val seedChunks: Int = 3) {
     }
 
     fun setPreferredDevice(device: AudioDeviceInfo?) {
-        track.preferredDevice = device
+        track.setPreferredDevice(device)
     }
 
     private suspend fun drainLoop() {
