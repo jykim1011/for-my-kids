@@ -131,17 +131,20 @@ class ParentActivity : AppCompatActivity() {
     }
 
     private fun startListeningService() {
-        startService(Intent(this, AudioListenService::class.java).setAction(AudioListenService.ACTION_START))
+        val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
+        val savedProgress = prefs.getInt(PREF_GAIN_FACTOR, 0)
+        startService(
+            Intent(this, AudioListenService::class.java)
+                .setAction(AudioListenService.ACTION_START)
+                .putExtra(AudioListenService.EXTRA_GAIN_PROGRESS, savedProgress)
+        )
         binding.tvListenLabel.text = getString(R.string.listen_stop)
         binding.tvChildStatus.text = getString(R.string.child_status_streaming)
         binding.layoutSpeaker.visibility = View.VISIBLE
         binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up)
         binding.cardGain.visibility = View.VISIBLE
-        val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
-        val savedProgress = prefs.getInt(PREF_GAIN_FACTOR, 0)
         binding.seekBarGain.progress = savedProgress
         binding.tvGainValue.text = progressToGainLabel(savedProgress)
-        AudioListenService.instance?.setGain(1.0f + (savedProgress / 20f) * 2.0f)
         setVolumeControlStream(AudioManager.STREAM_MUSIC)
     }
 

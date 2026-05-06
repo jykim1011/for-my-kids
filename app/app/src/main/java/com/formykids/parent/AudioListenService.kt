@@ -22,6 +22,7 @@ class AudioListenService : Service() {
         const val ACTION_STOP = "com.formykids.ACTION_STOP_LISTEN"
         const val ACTION_SPEAKER_ON = "com.formykids.ACTION_SPEAKER_ON"
         const val ACTION_SPEAKER_OFF = "com.formykids.ACTION_SPEAKER_OFF"
+        const val EXTRA_GAIN_PROGRESS = "gain_progress"
         private const val NOTIFICATION_ID = 2
 
         @Volatile var isListening = false
@@ -40,7 +41,7 @@ class AudioListenService : Service() {
             audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         }
         when (intent?.action) {
-            ACTION_START -> startListening()
+            ACTION_START -> startListening(intent.getIntExtra(EXTRA_GAIN_PROGRESS, 0))
             ACTION_STOP -> stopListening()
             ACTION_SPEAKER_ON -> setSpeaker(true)
             ACTION_SPEAKER_OFF -> setSpeaker(false)
@@ -48,11 +49,14 @@ class AudioListenService : Service() {
         return START_NOT_STICKY
     }
 
-    private fun startListening() {
+    private fun startListening(gainProgress: Int = 0) {
         if (isListening) return
         isListening = true
         isSpeakerphone = true
         player = AudioPlayer()
+        if (gainProgress > 0) {
+            player?.gainFactor = (1.0f + (gainProgress / 20f) * 2.0f).coerceIn(1.0f, 3.0f)
+        }
         routeSpeaker(true)
         WebSocketManager.send("""{"type":"start_listen"}""")
         WebSocketManager.onBinaryMessage = { bytes: ByteString ->
