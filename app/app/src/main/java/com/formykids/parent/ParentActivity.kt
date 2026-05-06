@@ -1,15 +1,21 @@
 package com.formykids.parent
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.formykids.App
 import com.formykids.R
 import com.formykids.WebSocketManager
@@ -26,6 +32,11 @@ import org.json.JSONObject
 import kotlin.random.Random
 
 class ParentActivity : AppCompatActivity() {
+
+    companion object {
+        private const val PREF_GAIN_FACTOR = "pref_gain_factor"
+        private const val REQ_NOTIFICATION = 1001
+    }
 
     private lateinit var binding: ActivityParentBinding
 
@@ -62,14 +73,10 @@ class ParentActivity : AppCompatActivity() {
                 binding.tvChildStatus.text = getString(R.string.child_status_idle)
                 binding.progressVolume.progress = 0
                 binding.layoutSpeaker.visibility = View.GONE
+                binding.cardGain.visibility = View.GONE
                 setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
             } else {
-                startService(Intent(this, AudioListenService::class.java).setAction(AudioListenService.ACTION_START))
-                binding.tvListenLabel.text = getString(R.string.listen_stop)
-                binding.tvChildStatus.text = getString(R.string.child_status_streaming)
-                binding.layoutSpeaker.visibility = View.VISIBLE
-                binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up)
-                setVolumeControlStream(AudioManager.STREAM_MUSIC)
+                requestNotificationPermissionThenListen()
             }
         }
 
@@ -84,6 +91,57 @@ class ParentActivity : AppCompatActivity() {
                 binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up)
             }
         }
+
+        binding.seekBarGain.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.tvGainValue.text = progressToGainLabel(progress)
+                val factor = 1.0f + (progress / 20f) * 2.0f
+                AudioListenService.instance?.setGain(factor)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
+                prefs.edit().putInt(PREF_GAIN_FACTOR, seekBar?.progress ?: 0).apply()
+            }
+        })
+    }
+
+    private fun progressToGainLabel(progress: Int): String {
+        val factor = 1.0f + (progress / 20f) * 2.0f
+        return String.format("%.1fx", factor)
+    }
+
+    private fun requestNotificationPermissionThenListen() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTIFICATION
+            )
+        } else {
+            startListeningService()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQ_NOTIFICATION) {
+            startListeningService()
+        }
+    }
+
+    private fun startListeningService() {
+        startService(Intent(this, AudioListenService::class.java).setAction(AudioListenService.ACTION_START))
+        binding.tvListenLabel.text = getString(R.string.listen_stop)
+        binding.tvChildStatus.text = getString(R.string.child_status_streaming)
+        binding.layoutSpeaker.visibility = View.VISIBLE
+        binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up)
+        binding.cardGain.visibility = View.VISIBLE
+        val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
+        val savedProgress = prefs.getInt(PREF_GAIN_FACTOR, 0)
+        binding.seekBarGain.progress = savedProgress
+        binding.tvGainValue.text = progressToGainLabel(savedProgress)
+        setVolumeControlStream(AudioManager.STREAM_MUSIC)
     }
 
     override fun onResume() {
@@ -100,9 +158,15 @@ class ParentActivity : AppCompatActivity() {
                 else R.drawable.ic_volume_off
             )
             setVolumeControlStream(AudioManager.STREAM_MUSIC)
+            binding.cardGain.visibility = View.VISIBLE
+            val prefs = getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE)
+            val savedProgress = prefs.getInt(PREF_GAIN_FACTOR, 0)
+            binding.seekBarGain.progress = savedProgress
+            binding.tvGainValue.text = progressToGainLabel(savedProgress)
         } else {
             binding.layoutSpeaker.visibility = View.GONE
             setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE)
+            binding.cardGain.visibility = View.GONE
         }
     }
 
