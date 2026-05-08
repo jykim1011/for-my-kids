@@ -13,11 +13,13 @@ class DetectionScheduleReceiver : BroadcastReceiver() {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED -> startDetectionService(context)
             ACTION_START_DETECTION -> {
+                rescheduleNext(context, intent)
                 val serviceIntent = Intent(context, DangerDetectionService::class.java)
                     .setAction(DangerDetectionService.ACTION_START_DETECTION)
                 context.startForegroundService(serviceIntent)
             }
             ACTION_STOP_DETECTION -> {
+                rescheduleNext(context, intent)
                 val serviceIntent = Intent(context, DangerDetectionService::class.java)
                     .setAction(DangerDetectionService.ACTION_STOP_DETECTION)
                 context.startForegroundService(serviceIntent)
@@ -30,22 +32,31 @@ class DetectionScheduleReceiver : BroadcastReceiver() {
         context.startForegroundService(Intent(context, DangerDetectionService::class.java))
     }
 
+    private fun rescheduleNext(context: Context, intent: Intent) {
+        val hour = intent.getIntExtra(EXTRA_HOUR, -1).takeIf { it >= 0 } ?: return
+        val requestCode = intent.getIntExtra(EXTRA_REQUEST_CODE, -1).takeIf { it >= 0 } ?: return
+        val alarmManager = context.getSystemService(AlarmManager::class.java)
+        scheduleExact(context, alarmManager, hour, intent.action!!, requestCode)
+    }
+
     companion object {
         const val ACTION_START_DETECTION = "com.formykids.SCHEDULE_START_DETECTION"
         const val ACTION_STOP_DETECTION = "com.formykids.SCHEDULE_STOP_DETECTION"
+        private const val EXTRA_HOUR = "extra_hour"
+        private const val EXTRA_REQUEST_CODE = "extra_request_code"
 
         fun rescheduleAlarms(context: Context, startHours: IntArray, endHours: IntArray) {
             val alarmManager = context.getSystemService(AlarmManager::class.java)
             cancelAlarms(context, alarmManager)
             startHours.forEachIndexed { i, hour ->
-                scheduleDaily(context, alarmManager, hour, ACTION_START_DETECTION, 100 + i)
+                scheduleExact(context, alarmManager, hour, ACTION_START_DETECTION, 100 + i)
             }
             endHours.forEachIndexed { i, hour ->
-                scheduleDaily(context, alarmManager, hour, ACTION_STOP_DETECTION, 200 + i)
+                scheduleExact(context, alarmManager, hour, ACTION_STOP_DETECTION, 200 + i)
             }
         }
 
-        private fun scheduleDaily(
+        private fun scheduleExact(
             context: Context,
             alarmManager: AlarmManager,
             hour: Int,
@@ -56,16 +67,18 @@ class DetectionScheduleReceiver : BroadcastReceiver() {
                 set(Calendar.HOUR_OF_DAY, hour)
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
                 if (timeInMillis <= System.currentTimeMillis()) add(Calendar.DAY_OF_YEAR, 1)
             }
             val pi = PendingIntent.getBroadcast(
                 context, requestCode,
-                Intent(context, DetectionScheduleReceiver::class.java).setAction(action),
+                Intent(context, DetectionScheduleReceiver::class.java)
+                    .setAction(action)
+                    .putExtra(EXTRA_HOUR, hour)
+                    .putExtra(EXTRA_REQUEST_CODE, requestCode),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            alarmManager.setRepeating(
-                AlarmManager.RTC_WAKEUP, cal.timeInMillis, AlarmManager.INTERVAL_DAY, pi
-            )
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pi)
         }
 
         private fun cancelAlarms(context: Context, alarmManager: AlarmManager) {
