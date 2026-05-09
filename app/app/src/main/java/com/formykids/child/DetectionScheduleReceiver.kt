@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import java.util.Calendar
 
 class DetectionScheduleReceiver : BroadcastReceiver() {
@@ -78,6 +79,10 @@ class DetectionScheduleReceiver : BroadcastReceiver() {
                     .putExtra(EXTRA_REQUEST_CODE, requestCode),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                android.util.Log.e("DetectionSchedule", "Exact alarm permission not granted; skipping schedule")
+                return
+            }
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pi)
         }
 

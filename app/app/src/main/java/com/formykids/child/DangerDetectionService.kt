@@ -279,13 +279,15 @@ class DangerDetectionService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S &&
+            !alarmManager.canScheduleExactAlarms()) return
         val restart = PendingIntent.getForegroundService(
             this, 0,
             Intent(applicationContext, DangerDetectionService::class.java),
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
-        (getSystemService(ALARM_SERVICE) as AlarmManager)
-            .setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000L, restart)
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000L, restart)
     }
 
     override fun onDestroy() {
