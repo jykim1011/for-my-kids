@@ -96,6 +96,14 @@ class DangerDetectionService : Service() {
         val fid = user["familyId"] as? String ?: return
         familyId = fid
         settingsListener = FirestoreManager.observeDetectionSettings(fid) { enabled, schedule ->
+            // Replace any stale setRepeating() alarms with exact alarms every time the schedule loads.
+            if (enabled && schedule.isNotEmpty()) {
+                DetectionScheduleReceiver.rescheduleAlarms(
+                    this,
+                    schedule.map { it.first }.toIntArray(),
+                    schedule.map { it.second }.toIntArray()
+                )
+            }
             val withinSchedule = schedule.isEmpty() || isWithinSchedule(schedule)
             if (enabled && withinSchedule) {
                 if (!detecting) scope.launch {
