@@ -110,12 +110,12 @@ class AudioStreamService : Service() {
         val frameSizeBytes = frameSize * 2 // 640 bytes
 
         val encoder = OpusEncoder(sampleRate, 1, OpusApplication.OPUS_APPLICATION_VOIP)
-        encoder.setBitrate(24000)
+        encoder.setBitrate(32000)
 
         val minBuf = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         val bufSize = maxOf(minBuf, frameSizeBytes * 4)
         val recorder = AudioRecord(
-            MediaRecorder.AudioSource.VOICE_COMMUNICATION, sampleRate,
+            MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRate,
             AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufSize
         )
         recorder.startRecording()
@@ -165,13 +165,13 @@ class AudioStreamService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        val restart = PendingIntent.getService(
+        val restart = PendingIntent.getForegroundService(
             this, 0,
             Intent(applicationContext, AudioStreamService::class.java),
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
         (getSystemService(ALARM_SERVICE) as AlarmManager)
-            .set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000L, restart)
+            .setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000L, restart)
     }
 
     override fun onDestroy() {
